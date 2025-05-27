@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Minha Primeira Musica MP3",
+    "fileName": "minha_primeira_musica_mp3.mp3"
+  },
+  {
+    "name": "Audio Trilha Sonora WAV",
+    "fileName": "audio_trilha_sonora_wav.wav"
+  },
+  {
+    "name": "Musica Sem Nome Personalizado OGG",
+    "fileName": "MusicaSemNomePersonalizadoOGG.ogg"
+  },
+  {
+    "name": "Outro Arquivo De Audio",
+    "fileName": "outro_arquivo_de_audio.mp3"
+  }
+]

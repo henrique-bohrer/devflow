@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+
+<head>
+  <meta charset="UTF-_8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevFlow Pomodoro IA (Player Local)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      /* padding-bottom: 100px; REMOVIDO - não mais necessário para player no rodapé */
+    }
+
+    .gradient-text-brand {
+      background-image: linear-gradient(to right, #4f46e5, #7c3aed);
+    }
+
+    .dark .gradient-text-brand {
+      background-image: linear-gradient(to right, #6366f1, #8b5cf6);
+    }
+
+    .gradient-text-neon {
+      background-image: linear-gradient(to right, #00CFE8, #A076F9);
+    }
+
+    .apply-gradient-text {
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .dark .title-gradient {
+      background-image: linear-gradient(to right, #00CFE8, #A076F9);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .title-gradient {
+      background-image: linear-gradient(to right, #4f46e5, #7c3aed);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #4f46e5;
+      border-radius: 10px;
+      border: 2px solid transparent;
+    }
+
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #00CFE8;
+    }
+
+    .custom-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: #4f46e5 transparent;
+    }
+
+    .dark .custom-scrollbar {
+      scrollbar-color: #00CFE8 transparent;
+    }
+
+    .modal {
+      transition: opacity 0.25s ease-in-out;
+    }
+
+    .modal-content {
+      transition: transform 0.25s ease-in-out, opacity 0.25s ease-in-out;
+    }
+
+    .modal.opacity-0 .modal-content {
+      transform: scale(0.95) translateY(10px);
+      opacity: 0;
+    }
+
+    .pomodoro-mode-btn.active {
+      --tw-ring-offset-width: 2px;
+      --tw-ring-color: #7c3aed;
+      box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+      --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+      --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+    }
+
+    .dark .pomodoro-mode-btn.active {
+      --tw-ring-offset-color: #09232B;
+      --tw-ring-color: #00CFE8;
+    }
+
+    .chat-message {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeInUp 0.3s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .timer-pulse {
+      animation: pulseTimer 0.5s ease-out;
+    }
+
+    @keyframes pulseTimer {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.03);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      background: #E0E0E0;
+      outline: none;
+      border-radius: 4px;
+      transition: background 0.2s ease-in-out;
+    }
+
+    .dark input[type="range"] {
+      background: #1F3A42;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      background: #4f46e5;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: background 0.2s ease-in-out;
+    }
+
+    .dark input[type="range"]::-webkit-slider-thumb {
+      background: #00CFE8;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      background: #4f46e5;
+      cursor: pointer;
+      border-radius: 50%;
+      border: none;
+      transition: background 0.2s ease-in-out;
+    }
+
+    .dark input[type="range"]::-moz-range-thumb {
+      background: #00CFE8;
+    }
+
+    /* Estilos para os botões do player de música na barra lateral */
+    #music-player-sidebar .music-player-controls {
+      color: #374151;
+      /* text-slate-700 */
+      transition: color 0.2s;
+    }
+
+    html:not(.dark) #music-player-sidebar .music-player-controls:hover {
+      color: #4f46e5;
+      /* Cor brand para hover no light mode */
+    }
+
+    html.dark #music-player-sidebar .music-player-controls {
+      color: #E0E0E0;
+    }
+
+    html.dark #music-player-sidebar .music-player-controls:hover {
+      color: #00CFE8;
+      /* Cor neon para hover no dark mode */
+    }
+
+    #music-player-sidebar .music-player-controls svg {
+      width: 1.5rem;
+      /* 24px */
+      height: 1.5rem;
+      /* 24px */
+    }
+
+    #music-player-sidebar .music-player-volume-control input[type="range"] {
+      height: 6px;
+    }
+
+    #music-player-sidebar .music-player-volume-control input[type="range"]::-webkit-slider-thumb {
+      width: 14px;
+      height: 14px;
+    }
+
+    #music-player-sidebar .music-player-volume-control input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+    }
+  </style>
+</head>
+
+<body
+  class="bg-slate-100 dark:bg-[#00141A] text-slate-800 dark:text-[#E0E0E0] min-h-screen selection:bg-[#A076F9] dark:selection:bg-[#00CFE8] selection:text-white dark:selection:text-[#00141A]">
+
+  <button id="theme-toggle"
+    class="fixed top-4 right-4 p-3 rounded-full shadow-lg bg-white dark:bg-[#09232B] text-slate-700 dark:text-[#E0E0E0] hover:bg-slate-200 dark:hover:bg-[#122B33] transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-[#00CFE8] hover:scale-105 z-50">
+    <svg id="theme-toggle-dark-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+    </svg>
+    <svg id="theme-toggle-light-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20">
+      <path
+        d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 10.607a1 1 0 010-1.414l.707-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414 0zM10 18a1 1 0 011-1v-1a1 1 0 11-2 0v1a1 1 0 011 1zM3 11a1 1 0 100-2H2a1 1 0 100 2h1z">
+      </path>
+    </svg>
+  </button>
+
+  <div class="flex flex-col md:flex-row min-h-screen">
+    <aside id="music-player-sidebar"
+      class="w-full md:w-72 bg-white dark:bg-[#09232B] p-4 md:sticky md:top-0 md:h-screen shadow-lg md:shadow-none z-30 order-last md:order-first flex flex-col custom-scrollbar overflow-y-auto">
+      <h3 class="text-xl font-semibold mb-6 text-center text-indigo-600 dark:text-[#00CFE8] shrink-0">Músicas</h3>
+      <audio id="local-audio-player" style="display: none;"></audio>
+
+      <div id="player-controls-vertical" class="flex flex-col items-center space-y-4 mt-4">
+        <p id="player-current-track-name"
+          class="text-base font-medium text-slate-700 dark:text-[#E0E0E0] truncate w-full text-center"
+          title="Nenhuma música tocando">Nenhuma música tocando</p>
+        <div class="w-full px-4">
+          <input type="range" id="player-progress-slider" min="0" max="100" value="0"
+            class="w-full h-2 appearance-none bg-slate-300 dark:bg-slate-700 rounded-lg [&::-webkit-slider-thumb]:bg-indigo-500 dark:[&::-webkit-slider-thumb]:bg-[#00CFE8] [&::-moz-range-thumb]:bg-indigo-500 dark:[&::-moz-range-thumb]:bg-[#00CFE8] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-none">
+          <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <span id="player-current-time">0:00</span>
+            <span id="player-total-time">0:00</span>
+          </div>
+        </div>
+        <div class="flex space-x-4 items-center">
+          <button id="player-prev-btn"
+            class="music-player-controls p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+              <path
+                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" />
+              <path d="M6 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" />
+            </svg>
+          </button>
+          <button id="player-play-pause-btn"
+            class="music-player-controls p-3 rounded-full bg-indigo-500 dark:bg-[#00A9C0] text-white dark:text-black shadow-md hover:opacity-90 transition-opacity"
+            disabled>
+            <svg id="player-play-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+              class="w-7 h-7">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.068v3.864a1 1 0 001.555.832l3.197-1.932a1 1 0 000-1.664L9.555 7.168z"
+                clip-rule="evenodd" />
+            </svg>
+            <svg id="player-pause-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+              class="w-7 h-7 hidden">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1H8zm3 0a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1h-1z"
+                clip-rule="evenodd" />
+            </svg>
+          </button>
+          <button id="player-next-btn"
+            class="music-player-controls p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+              <path
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+              <path d="M14 15a1 1 0 01-1-1V6a1 1 0 112 0v8a1 1 0 01-1 1z" />
+            </svg>
+          </button>
+        </div>
+        <div class="flex items-center space-x-2 music-player-volume-control w-full max-w-xs px-4 pt-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-600 dark:text-[#95A5A6] shrink-0"
+            viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M7 4a1 1 0 00-2 0v2H4a1 1 0 000 2h1v2a1 1 0 102 0V8h1a1 1 0 100-2H7V4zM12 4a1 1 0 011 1v1.343A3.99 3.99 0 0115.5 6c1.161 0 2.164.548 2.828 1.382A4.003 4.003 0 0119 10a4 4 0 01-2.828 3.828A3.99 3.99 0 0113.5 14H10a1 1 0 110-2h3.5a1.991 1.991 0 000-3.776A1.99 1.99 0 0012 6.343V5a1 1 0 01-1-1z" />
+          </svg>
+          <input type="range" id="player-volume-slider" min="0" max="100" value="80"
+            class="w-full h-2 appearance-none bg-slate-300 dark:bg-slate-700 rounded-lg [&::-webkit-slider-thumb]:bg-indigo-500 dark:[&::-webkit-slider-thumb]:bg-[#00CFE8] [&::-moz-range-thumb]:bg-indigo-500 dark:[&::-moz-range-thumb]:bg-[#00CFE8] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-none">
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-grow p-4 md:p-6 overflow-y-auto">
+      <div class="w-full max-w-5xl mx-auto flex flex-col items-center">
+        <header class="text-center mb-8 w-full">
+          <h1 class="text-4xl md:text-5xl font-bold title-gradient">DevFlow Pomodoro IA</h1>
+          <p class="text-slate-600 dark:text-[#95A5A6] mt-2">Foco total com assistência inteligente para seus códigos.
+          </p>
+        </header>
+
+        <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="md:col-span-1 flex flex-col gap-8">
+            <section id="pomodoro-section"
+              class="w-full bg-white dark:bg-[#09232B] p-6 sm:p-8 rounded-xl shadow-2xl dark:shadow-[0_10px_15px_-3px_rgba(0,207,232,0.1),_0_4px_6px_-4px_rgba(0,207,232,0.1)] transition-all duration-300 ease-in-out hover:shadow-3xl dark:hover:shadow-[0_20px_25px_-5px_rgba(0,207,232,0.15),_0_8px_10px_-6px_rgba(0,207,232,0.15)]">
+              <h2 id="current-mode-display"
+                class="text-2xl sm:text-3xl font-semibold mb-6 text-center text-indigo-600 dark:text-[#00CFE8]">Modo
+                Foco
+              </h2>
+              <div id="timer-display"
+                class="text-7xl sm:text-8xl font-bold text-center my-8 sm:my-10 text-slate-700 dark:text-[#E0E0E0]">
+                25:00
+              </div>
+              <div class="flex justify-center items-center mb-6 space-x-2 sm:space-x-3">
+                <button id="focus-mode-btn" data-mode="focus"
+                  class="pomodoro-mode-btn flex-1 py-2 px-3 bg-indigo-500 dark:bg-[#00A9C0] text-white dark:text-[#00141A] rounded-lg shadow hover:bg-indigo-600 dark:hover:bg-[#00CFE8] transition-all duration-300 ease-in-out text-sm sm:text-base transform hover:scale-105">Foco</button>
+                <button id="short-break-mode-btn" data-mode="shortBreak"
+                  class="pomodoro-mode-btn flex-1 py-2 px-3 bg-green-500 dark:bg-[#2ECC71]/80 text-white dark:text-[#00141A] rounded-lg shadow hover:bg-green-600 dark:hover:bg-[#2ECC71] transition-all duration-300 ease-in-out text-sm sm:text-base transform hover:scale-105">Pausa
+                  Curta</button>
+                <button id="long-break-mode-btn" data-mode="longBreak"
+                  class="pomodoro-mode-btn flex-1 py-2 px-3 bg-blue-500 dark:bg-[#0077B6]/80 text-white dark:text-[#00141A] rounded-lg shadow hover:bg-blue-600 dark:hover:bg-[#0077B6] transition-all duration-300 ease-in-out text-sm sm:text-base transform hover:scale-105">Pausa
+                  Longa</button>
+              </div>
+              <div class="flex justify-center space-x-4">
+                <button id="start-timer-btn"
+                  class="py-3 px-8 bg-brand-gradient dark:bg-gradient-to-r dark:from-[#00CFE8] dark:to-[#A076F9] text-white dark:text-[#00141A] font-semibold rounded-lg shadow-md hover:opacity-90 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-[#00CFE8] focus:ring-opacity-75 text-base sm:text-lg transform hover:scale-105 active:scale-95">
+                  Iniciar
+                </button>
+                <button id="pause-timer-btn"
+                  class="py-3 px-8 bg-slate-500 dark:bg-[#7F8C8D] hover:bg-slate-600 dark:hover:bg-[#95A5A6] text-white dark:text-[#00141A] font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-[#95A5A6] focus:ring-opacity-75 text-base sm:text-lg transform hover:scale-105 active:scale-95">
+                  Pausar
+                </button>
+                <button id="reset-timer-btn"
+                  class="py-3 px-8 bg-red-500 dark:bg-[#FF6B6B] hover:bg-red-600 dark:hover:bg-[#E74C3C] text-white dark:text-[#00141A] font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-400 dark:focus:ring-[#FF6B6B] focus:ring-opacity-75 text-base sm:text-lg transform hover:scale-105 active:scale-95">
+                  Resetar Ciclo
+                </button>
+              </div>
+              <div class="mt-6 text-center">
+                <p class="text-sm text-slate-500 dark:text-[#95A5A6]">Ciclos de Foco Completos (nesta sessão): <span
+                    id="cycles-count-display">0</span></p>
+                <p class="text-xs text-slate-400 dark:text-[#7F8C8D] mt-1">(Pausa longa após <span
+                    id="cycles-for-long-break-display">4</span> ciclos de foco)</p>
+              </div>
+
+              <div class="mt-10 pt-6 border-t border-slate-200 dark:border-[#122B33]">
+                <h3 class="text-lg font-semibold mb-4 text-center text-slate-700 dark:text-[#E0E0E0]">Configurar Tempos
+                  (minutos)</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label for="focus-duration-input"
+                      class="block text-sm font-medium text-slate-600 dark:text-[#95A5A6]">Foco:</label>
+                    <input type="number" id="focus-duration-input" min="20" value="25"
+                      class="mt-1 block w-full p-2 border border-slate-300 dark:border-[#1F3A42] rounded-md shadow-sm focus:ring-[#00CFE8] focus:border-[#00CFE8] bg-white dark:bg-[#011E28] text-slate-800 dark:text-[#E0E0E0]">
+                  </div>
+                  <div>
+                    <label for="short-break-input"
+                      class="block text-sm font-medium text-slate-600 dark:text-[#95A5A6]">Pausa Curta:</label>
+                    <input type="number" id="short-break-input" min="1" value="5"
+                      class="mt-1 block w-full p-2 border border-slate-300 dark:border-[#1F3A42] rounded-md shadow-sm focus:ring-[#2ECC71] focus:border-[#2ECC71] bg-white dark:bg-[#011E28] text-slate-800 dark:text-[#E0E0E0]">
+                  </div>
+                  <div>
+                    <label for="long-break-input"
+                      class="block text-sm font-medium text-slate-600 dark:text-[#95A5A6]">Pausa
+                      Longa:</label>
+                    <input type="number" id="long-break-input" min="1" value="15"
+                      class="mt-1 block w-full p-2 border border-slate-300 dark:border-[#1F3A42] rounded-md shadow-sm focus:ring-[#00A9E0] focus:border-[#00A9E0] bg-white dark:bg-[#011E28] text-slate-800 dark:text-[#E0E0E0]">
+                  </div>
+                </div>
+                <button id="save-pomodoro-settings-btn"
+                  class="w-full py-2 px-4 bg-purple-600 dark:bg-[#A076F9] hover:bg-purple-700 dark:hover:bg-[#7D50DE] text-white dark:text-[#00141A] font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95">
+                  Salvar Configurações do Pomodoro
+                </button>
+            </section>
+          </div>
+          <div class="md:col-span-1 flex flex-col">
+            <section id="ai-assistant-section"
+              class="w-full h-full bg-white dark:bg-[#09232B] p-6 rounded-xl shadow-2xl dark:shadow-[0_10px_15px_-3px_rgba(0,207,232,0.1),_0_4px_6px_-4px_rgba(0,207,232,0.1)] flex flex-col transition-all duration-300 ease-in-out hover:shadow-3xl dark:hover:shadow-[0_20px_25px_-5px_rgba(0,207,232,0.15),_0_8px_10px_-6px_rgba(0,207,232,0.15)]">
+              <h2 class="text-2xl font-semibold mb-6 text-center text-purple-600 dark:text-[#A076F9]">Assistente IA</h2>
+              <div id="ai-chat-box"
+                class="flex-grow h-96 md:h-[calc(100%-150px)] overflow-y-auto mb-4 p-4 border border-slate-300 dark:border-[#1F3A42] rounded-lg bg-slate-50 dark:bg-[#011E28] custom-scrollbar">
+                <div class="text-sm text-slate-500 dark:text-[#7F8C8D]">Olá! Como posso ajudar com seu código hoje? (Ex:
+                  corrigir, dar dicas, explicar)</div>
+              </div>
+              <div class="flex items-center space-x-3 mt-auto">
+                <textarea id="ai-input" rows="2"
+                  class="flex-grow p-3 border border-slate-300 dark:border-[#1F3A42] rounded-lg focus:ring-2 focus:ring-[#A076F9] dark:focus:border-[#A076F9] outline-none resize-none bg-white dark:bg-[#011E28] text-slate-800 dark:text-[#E0E0E0] placeholder-slate-400 dark:placeholder-[#7F8C8D] transition-all duration-300 ease-in-out"></textarea>
+                <button id="send-to-ai-btn"
+                  class="p-3 bg-brand-gradient dark:bg-gradient-to-r dark:from-[#00CFE8] dark:to-[#A076F9] text-white dark:text-[#00141A] rounded-lg shadow-md hover:opacity-90 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-[#00CFE8] focus:ring-opacity-75 transform hover:scale-105 active:scale-95">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
+              </div>
+              <div id="ai-loading" class="text-center mt-2 text-sm text-[#A076F9] hidden">
+                Pensando...
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <footer class="text-center mt-12 py-6 border-t border-slate-200 dark:border-[#122B33] w-full">
+          <p class="text-sm text-slate-500 dark:text-[#7F8C8D]">&copy; <span id="current-year"></span> DevFlow Pomodoro
+            IA. Todos os direitos reservados.</p>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <div id="message-modal"
+    class="modal fixed inset-0 bg-black bg-opacity-75 dark:bg-opacity-80 flex items-center justify-center p-4 hidden opacity-0">
+    <div
+      class="modal-content bg-white dark:bg-[#09232B] p-8 rounded-xl shadow-2xl w-full max-w-sm transform scale-100 opacity-100">
+      <h3 id="message-modal-title" class="text-xl font-semibold mb-4 text-slate-800 dark:text-[#00CFE8]">Mensagem</h3>
+      <p id="message-modal-text" class="mb-6 text-slate-700 dark:text-[#E0E0E0]"></p>
+      <button id="message-modal-close"
+        class="py-2 px-6 bg-indigo-600 dark:bg-[#00CFE8] hover:bg-indigo-700 dark:hover:bg-[#00A9C0] text-white dark:text-[#00141A] font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95">OK</button>
+    </div>
+  </div>
+  <audio id="notification-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"
+    preload="auto"></audio>
+
+  <script>
+    // Function to apply the current theme (dark/light)
+    function applyTheme(theme) {
+      const darkIcon = document.getElementById('theme-toggle-dark-icon');
+      const lightIcon = document.getElementById('theme-toggle-light-icon');
+      const titleElement = document.querySelector('header h1'); // Assuming h1 is the main title
+
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        if (darkIcon) darkIcon.classList.remove('hidden');
+        if (lightIcon) lightIcon.classList.add('hidden');
+        if (titleElement) { // Apply neon gradient for dark mode title
+          titleElement.classList.remove('gradient-text-brand');
+          titleElement.classList.add('gradient-text-neon');
+        }
+      } else {
+        document.documentElement.classList.remove('dark');
+        if (darkIcon) darkIcon.classList.add('hidden');
+        if (lightIcon) lightIcon.classList.remove('hidden');
+        if (titleElement) { // Apply brand gradient for light mode title
+          titleElement.classList.remove('gradient-text-neon');
+          titleElement.classList.add('gradient-text-brand');
+        }
+      }
+    }
+
+    // DOM Elements
+    const timerDisplay = document.getElementById('timer-display');
+    const startTimerBtn = document.getElementById('start-timer-btn');
+    const pauseTimerBtn = document.getElementById('pause-timer-btn');
+    const resetTimerBtn = document.getElementById('reset-timer-btn');
+    const cyclesCountDisplay = document.getElementById('cycles-count-display');
+    const currentModeDisplay = document.getElementById('current-mode-display');
+    const cyclesForLongBreakDisplay = document.getElementById('cycles-for-long-break-display');
+
+    const focusModeBtn = document.getElementById('focus-mode-btn');
+    const shortBreakModeBtn = document.getElementById('short-break-mode-btn');
+    const longBreakModeBtn = document.getElementById('long-break-mode-btn');
+    const modeButtons = [focusModeBtn, shortBreakModeBtn, longBreakModeBtn];
+
+    const focusDurationInput = document.getElementById('focus-duration-input');
+    const shortBreakInput = document.getElementById('short-break-input');
+    const longBreakInput = document.getElementById('long-break-input');
+    const savePomodoroSettingsBtn = document.getElementById('save-pomodoro-settings-btn');
+
+    const aiChatBox = document.getElementById('ai-chat-box');
+    const aiInput = document.getElementById('ai-input');
+    const sendToAiBtn = document.getElementById('send-to-ai-btn');
+    const aiLoading = document.getElementById('ai-loading');
+
+    const themeToggleBtn = document.getElementById('theme-toggle');
+
+    const messageModal = document.getElementById('message-modal');
+    const messageModalTitle = document.getElementById('message-modal-title');
+    const messageModalText = document.getElementById('message-modal-text');
+    const messageModalCloseBtn = document.getElementById('message-modal-close');
+    const notificationSound = document.getElementById('notification-sound');
+
+    // Music Player Elements
+    const localAudioPlayer = document.getElementById('local-audio-player');
+    const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
+    const playerPlayIcon = document.getElementById('player-play-icon');
+    const playerPauseIcon = document.getElementById('player-pause-icon');
+    const playerPrevBtn = document.getElementById('player-prev-btn');
+    const playerNextBtn = document.getElementById('player-next-btn');
+    const playerVolumeSlider = document.getElementById('player-volume-slider');
+    const playerCurrentTrackName = document.getElementById('player-current-track-name');
+    const playerProgressSlider = document.getElementById('player-progress-slider');
+    const playerCurrentTime = document.getElementById('player-current-time');
+    const playerTotalTime = document.getElementById('player-total-time');
+
+
+    // Pomodoro State Variables
+    let timerInterval;
+    let timeLeft;
+    const DEFAULT_POMODORO_SETTINGS = {
+      focusDuration: 25 * 60, // seconds
+      shortBreakDuration: 5 * 60, // seconds
+      longBreakDuration: 15 * 60, // seconds
+      cyclesBeforeLongBreak: 4
+    };
+    let focusDuration, shortBreakDuration, longBreakDuration, cyclesBeforeLongBreak;
+    let currentCycleCount = 0;
+    let isPaused = true;
+    let currentMode = 'focus'; // 'focus', 'shortBreak', 'longBreak'
+
+    // --- Music Player: Static Playlist ---
+    // IMPORTANTE:
+    // 1. Crie uma pasta chamada 'musicas' no mesmo local que este arquivo devflow.html.
+    // 2. Coloque seus arquivos de música (MP3, WAV, OGG, etc.) dentro da pasta 'musicas'.
+    // 3. Edite a lista 'userMusicTracks' abaixo para incluir suas músicas.
+    //    - 'name' é o nome que aparecerá no player.
+    //    - 'src' é o caminho para o arquivo, começando com "musicas/".
+    const userMusicTracks = [
+      { name: "Chasing Echoes (WAV)", src: "musicas/Chasing Echoes.wav" },
+      { name: "Pulse (WAV)", src: "musicas/Pulse.wav" },
+      { name: "The Rise (WAV)", src: "musicas/The Rise.wav" }
+      // Exemplo de como adicionar sua música:
+      // { name: "Minha Música Legal", src: "musicas/minha_musica_legal.mp3" },
+    ];
+    let currentMusicTrackIndex = 0;
+    let isMusicPlaying = false;
+    // Paths for example tracks to check in error handling
+    const exampleTrackPaths = [ // Used to give specific error messages for default tracks
+      "musicas/lofi_chill.mp3",
+      "musicas/focus_beats.wav",
+      "musicas/ambient_study.ogg"
+    ];
+
+
+    // --- Pomodoro Settings ---
+    function loadPomodoroSettings() {
+      const savedSettings = localStorage.getItem('pomodoroSettings');
+      let settings;
+      if (savedSettings) {
+        try {
+          settings = JSON.parse(savedSettings);
+          settings.focusDuration = parseInt(settings.focusDuration, 10) || (DEFAULT_POMODORO_SETTINGS.focusDuration / 60);
+          settings.shortBreakDuration = parseInt(settings.shortBreakDuration, 10) || (DEFAULT_POMODORO_SETTINGS.shortBreakDuration / 60);
+          settings.longBreakDuration = parseInt(settings.longBreakDuration, 10) || (DEFAULT_POMODORO_SETTINGS.longBreakDuration / 60);
+          settings.cyclesBeforeLongBreak = parseInt(settings.cyclesBeforeLongBreak, 10) || DEFAULT_POMODORO_SETTINGS.cyclesBeforeLongBreak;
+        } catch (e) {
+          console.error("Error loading Pomodoro settings from localStorage:", e);
+          settings = {
+            focusDuration: DEFAULT_POMODORO_SETTINGS.focusDuration / 60,
+            shortBreakDuration: DEFAULT_POMODORO_SETTINGS.shortBreakDuration / 60,
+            longBreakDuration: DEFAULT_POMODORO_SETTINGS.longBreakDuration / 60,
+            cyclesBeforeLongBreak: DEFAULT_POMODORO_SETTINGS.cyclesBeforeLongBreak
+          };
+        }
+      } else {
+        settings = {
+          focusDuration: DEFAULT_POMODORO_SETTINGS.focusDuration / 60,
+          shortBreakDuration: DEFAULT_POMODORO_SETTINGS.shortBreakDuration / 60,
+          longBreakDuration: DEFAULT_POMODORO_SETTINGS.longBreakDuration / 60,
+          cyclesBeforeLongBreak: DEFAULT_POMODORO_SETTINGS.cyclesBeforeLongBreak
+        };
+      }
+
+      focusDurationInput.value = settings.focusDuration;
+      shortBreakInput.value = settings.shortBreakDuration;
+      longBreakInput.value = settings.longBreakDuration;
+
+      focusDuration = Math.max(20, settings.focusDuration) * 60;
+      shortBreakDuration = Math.max(1, settings.shortBreakDuration) * 60;
+      longBreakDuration = Math.max(1, settings.longBreakDuration) * 60;
+      cyclesBeforeLongBreak = settings.cyclesBeforeLongBreak;
+
+      cyclesForLongBreakDisplay.textContent = cyclesBeforeLongBreak;
+      setMode('focus', true);
+    }
+
+    function handleSavePomodoroSettings() {
+      const newFocusMin = parseInt(focusDurationInput.value, 10);
+      const newShortMin = parseInt(shortBreakInput.value, 10);
+      const newLongMin = parseInt(longBreakInput.value, 10);
+
+      if (isNaN(newFocusMin) || newFocusMin < 20) {
+        showMessage("Erro de Configuração", "O tempo de foco deve ser um número e no mínimo 20 minutos.");
+        focusDurationInput.value = focusDuration / 60;
+        return;
+      }
+      if (isNaN(newShortMin) || newShortMin < 1) {
+        showMessage("Erro de Configuração", "O tempo de pausa curta deve ser um número e no mínimo 1 minuto.");
+        shortBreakInput.value = shortBreakDuration / 60;
+        return;
+      }
+      if (isNaN(newLongMin) || newLongMin < 1) {
+        showMessage("Erro de Configuração", "O tempo de pausa longa deve ser um número e no mínimo 1 minuto.");
+        longBreakInput.value = longBreakDuration / 60;
+        return;
+      }
+
+      focusDuration = newFocusMin * 60;
+      shortBreakDuration = newShortMin * 60;
+      longBreakDuration = newLongMin * 60;
+
+      const settingsToSave = {
+        focusDuration: newFocusMin,
+        shortBreakDuration: newShortMin,
+        longBreakDuration: newLongMin,
+        cyclesBeforeLongBreak: cyclesBeforeLongBreak
+      };
+      localStorage.setItem('pomodoroSettings', JSON.stringify(settingsToSave));
+      showMessage("Sucesso!", "Configurações do Pomodoro salvas.");
+      setMode('focus', true);
+    }
+    if (savePomodoroSettingsBtn) savePomodoroSettingsBtn.addEventListener('click', handleSavePomodoroSettings);
+
+    // --- Theme Toggle ---
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        const newTheme = isDark ? 'dark' : 'light';
+        applyTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+      });
+    }
+
+    // --- Pomodoro Timer Logic ---
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      document.title = `${timerDisplay.textContent} - ${currentModeDisplay.textContent} | DevFlow`;
+    }
+
+    function updateModeDisplay() {
+      modeButtons.forEach(btn => btn.classList.remove('active'));
+      timerDisplay.classList.remove('timer-pulse');
+
+      if (currentMode === 'focus') {
+        currentModeDisplay.textContent = 'Modo Foco';
+        if (focusModeBtn) focusModeBtn.classList.add('active');
+      } else if (currentMode === 'shortBreak') {
+        currentModeDisplay.textContent = 'Pausa Curta';
+        if (shortBreakModeBtn) shortBreakModeBtn.classList.add('active');
+      } else if (currentMode === 'longBreak') {
+        currentModeDisplay.textContent = 'Pausa Longa';
+        if (longBreakModeBtn) longBreakModeBtn.classList.add('active');
+      }
+      void timerDisplay.offsetWidth;
+      timerDisplay.classList.add('timer-pulse');
+    }
+
+    function playNotificationSound() {
+      if (notificationSound) {
+        notificationSound.currentTime = 0;
+        notificationSound.play().catch(error => console.warn("Error playing notification sound:", error));
+      }
+    }
+
+    function setMode(mode, manualReset = false) {
+      currentMode = mode;
+      isPaused = true;
+      clearInterval(timerInterval);
+
+      switch (mode) {
+        case 'focus': timeLeft = focusDuration; break;
+        case 'shortBreak': timeLeft = shortBreakDuration; break;
+        case 'longBreak': timeLeft = longBreakDuration; break;
+        default: timeLeft = focusDuration; currentMode = 'focus';
+      }
+
+      updateTimerDisplay();
+      updateModeDisplay();
+      if (startTimerBtn) {
+        startTimerBtn.textContent = 'Iniciar';
+        startTimerBtn.disabled = false;
+      }
+      if (pauseTimerBtn) {
+        pauseTimerBtn.textContent = 'Pausar';
+        pauseTimerBtn.disabled = true;
+      }
+
+      if (manualReset) {
+        currentCycleCount = 0;
+        if (cyclesCountDisplay) cyclesCountDisplay.textContent = currentCycleCount;
+      }
+    }
+
+    function startNextMode() {
+      playNotificationSound();
+      const previousMode = currentMode; // Store mode before changing it with setMode
+
+      if (previousMode === 'focus') {
+        currentCycleCount++;
+        if (cyclesCountDisplay) cyclesCountDisplay.textContent = currentCycleCount;
+        if (currentCycleCount > 0 && currentCycleCount % cyclesBeforeLongBreak === 0) {
+          setMode('longBreak');
+        } else {
+          setMode('shortBreak');
+        }
+      } else { // Coming from shortBreak or longBreak
+        setMode('focus');
+        if (previousMode === 'longBreak') {
+          currentCycleCount = 0;
+          if (cyclesCountDisplay) cyclesCountDisplay.textContent = currentCycleCount;
+        }
+      }
+      startTimer();
+    }
+
+    function startTimer() {
+      if (isPaused) {
+        isPaused = false;
+        if (startTimerBtn) {
+          startTimerBtn.textContent = 'Rodando...';
+          startTimerBtn.disabled = true;
+        }
+        if (pauseTimerBtn) {
+          pauseTimerBtn.textContent = 'Pausar';
+          pauseTimerBtn.disabled = false;
+        }
+
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          updateTimerDisplay();
+          if (timeLeft < 0) {
+            clearInterval(timerInterval);
+            timeLeft = 0;
+            updateTimerDisplay();
+            startNextMode();
+          }
+        }, 1000);
+      }
+    }
+
+    function pauseTimer() {
+      clearInterval(timerInterval);
+      isPaused = true;
+      if (startTimerBtn) {
+        startTimerBtn.textContent = 'Continuar';
+        startTimerBtn.disabled = false;
+      }
+      if (pauseTimerBtn) {
+        pauseTimerBtn.textContent = 'Pausado';
+        pauseTimerBtn.disabled = true;
+      }
+    }
+
+    if (focusModeBtn) focusModeBtn.addEventListener('click', () => setMode('focus', true));
+    if (shortBreakModeBtn) shortBreakModeBtn.addEventListener('click', () => setMode('shortBreak', true));
+    if (longBreakModeBtn) longBreakModeBtn.addEventListener('click', () => setMode('longBreak', true));
+
+    if (startTimerBtn) startTimerBtn.addEventListener('click', startTimer);
+    if (pauseTimerBtn) pauseTimerBtn.addEventListener('click', pauseTimer);
+    if (resetTimerBtn) resetTimerBtn.addEventListener('click', () => {
+      showMessage("Ciclo Resetado", "O temporizador foi resetado para o modo Foco e a contagem de ciclos zerada.");
+      setMode('focus', true);
+    });
+
+    // --- Music Player Logic (Static List) ---
+    function formatTime(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function initializeMusicPlayer() {
+      console.log("Initializing Music Player. userMusicTracks:", JSON.stringify(userMusicTracks));
+      console.log("Number of tracks found:", Array.isArray(userMusicTracks) ? userMusicTracks.length : 'Not an array');
+
+      if (Array.isArray(userMusicTracks) && userMusicTracks.length > 0) {
+        loadMusicTrack(currentMusicTrackIndex);
+        if (playerPlayPauseBtn) playerPlayPauseBtn.disabled = false;
+        if (playerPrevBtn) playerPrevBtn.disabled = false;
+        if (playerNextBtn) playerNextBtn.disabled = false;
+      } else {
+        console.warn("userMusicTracks is empty or not a valid array. Player controls will remain disabled.");
+        if (playerCurrentTrackName) {
+          playerCurrentTrackName.textContent = "Nenhuma música na lista";
+          playerCurrentTrackName.title = "Nenhuma música na lista. Adicione faixas ao array 'userMusicTracks' no código HTML.";
+        }
+        showMessage("Player Vazio", "Nenhuma música definida. Edite o array 'userMusicTracks' no código HTML para adicionar suas músicas.");
+        if (localAudioPlayer) localAudioPlayer.src = "";
+        if (playerPlayIcon) playerPlayIcon.classList.remove('hidden');
+        if (playerPauseIcon) playerPauseIcon.classList.add('hidden');
+        isMusicPlaying = false;
+        if (playerPlayPauseBtn) playerPlayPauseBtn.disabled = true;
+        if (playerPrevBtn) playerPrevBtn.disabled = true;
+        if (playerNextBtn) playerNextBtn.disabled = true;
+        if (playerCurrentTime) playerCurrentTime.textContent = "0:00";
+        if (playerTotalTime) playerTotalTime.textContent = "0:00";
+        if (playerProgressSlider) playerProgressSlider.value = 0;
+      }
+    }
+
+    function loadMusicTrack(index) {
+      currentMusicTrackIndex = (index + userMusicTracks.length) % userMusicTracks.length;
+      const track = userMusicTracks[currentMusicTrackIndex];
+
+      if (track && typeof track.src === 'string' && typeof track.name === 'string') {
+        if (localAudioPlayer) {
+          console.log("Loading track:", track.name, "from", track.src);
+          localAudioPlayer.src = track.src;
+          localAudioPlayer.load();
+        }
+        if (playerCurrentTrackName) {
+          playerCurrentTrackName.textContent = track.name;
+          playerCurrentTrackName.title = track.name;
+        }
+        if (playerProgressSlider) playerProgressSlider.value = 0;
+        if (playerCurrentTime) playerCurrentTime.textContent = "0:00";
+        if (playerTotalTime) playerTotalTime.textContent = "0:00";
+
+      } else {
+        console.error("Dados da faixa inválidos no índice:", currentMusicTrackIndex, track);
+        if (playerCurrentTrackName) {
+          playerCurrentTrackName.textContent = "Erro ao carregar faixa";
+          playerCurrentTrackName.title = "Erro: dados da faixa inválidos.";
+        }
+        if (playerPlayPauseBtn) playerPlayPauseBtn.disabled = true;
+        showMessage("Erro na Faixa", `Os dados para a música no índice ${currentMusicTrackIndex} parecem estar incorretos. Verifique o array 'userMusicTracks'.`);
+      }
+    }
+
+    function toggleMusicPlayer() {
+      if (!Array.isArray(userMusicTracks) || userMusicTracks.length === 0) {
+        showMessage("Player Vazio", "Nenhuma música definida. Edite 'userMusicTracks' no código HTML.");
+        return;
+      }
+      if (localAudioPlayer && !localAudioPlayer.src && userMusicTracks.length > 0) {
+        console.log("Audio source is empty, attempting to load track:", currentMusicTrackIndex);
+        loadMusicTrack(currentMusicTrackIndex);
+      }
+      if (localAudioPlayer && !localAudioPlayer.src) {
+        console.warn("Tentativa de play/pause sem música carregada (src vazio).");
+        showMessage("Erro no Player", "Nenhuma música carregada. Verifique os caminhos das músicas em 'userMusicTracks' e o console para erros.");
+        return;
+      }
+
+      if (localAudioPlayer && localAudioPlayer.paused) {
+        localAudioPlayer.play().then(() => {
+          if (playerPlayIcon) playerPlayIcon.classList.add('hidden');
+          if (playerPauseIcon) playerPauseIcon.classList.remove('hidden');
+          isMusicPlaying = true;
+        }).catch(error => {
+          console.error("Erro ao tentar tocar música (play()):", error);
+        });
+      } else if (localAudioPlayer) {
+        localAudioPlayer.pause();
+        if (playerPlayIcon) playerPlayIcon.classList.remove('hidden');
+        if (playerPauseIcon) playerPauseIcon.classList.add('hidden');
+        isMusicPlaying = false;
+      }
+    }
+
+    if (playerPlayPauseBtn) playerPlayPauseBtn.addEventListener('click', toggleMusicPlayer);
+
+    if (playerPrevBtn) playerPrevBtn.addEventListener('click', () => {
+      if (!Array.isArray(userMusicTracks) || userMusicTracks.length === 0) return;
+      currentMusicTrackIndex = (currentMusicTrackIndex - 1 + userMusicTracks.length) % userMusicTracks.length;
+      loadMusicTrack(currentMusicTrackIndex);
+      if (isMusicPlaying && localAudioPlayer) {
+        localAudioPlayer.play().catch(error => console.error("Erro ao tocar música (prev):", error));
+      }
+    });
+
+    if (playerNextBtn) playerNextBtn.addEventListener('click', () => {
+      if (!Array.isArray(userMusicTracks) || userMusicTracks.length === 0) return;
+      currentMusicTrackIndex = (currentMusicTrackIndex + 1) % userMusicTracks.length;
+      loadMusicTrack(currentMusicTrackIndex);
+      if (isMusicPlaying && localAudioPlayer) {
+        localAudioPlayer.play().catch(error => console.error("Erro ao tocar música (next):", error));
+      }
+    });
+
+    if (localAudioPlayer) {
+      localAudioPlayer.addEventListener('loadedmetadata', () => {
+        if (playerTotalTime) playerTotalTime.textContent = formatTime(localAudioPlayer.duration);
+        if (playerProgressSlider) playerProgressSlider.max = localAudioPlayer.duration;
+      });
+      localAudioPlayer.addEventListener('timeupdate', () => {
+        if (playerCurrentTime) playerCurrentTime.textContent = formatTime(localAudioPlayer.currentTime);
+        if (playerProgressSlider) playerProgressSlider.value = localAudioPlayer.currentTime;
+      });
+      localAudioPlayer.addEventListener('ended', () => {
+        if (!Array.isArray(userMusicTracks) || userMusicTracks.length === 0) return;
+        currentMusicTrackIndex = (currentMusicTrackIndex + 1) % userMusicTracks.length;
+        loadMusicTrack(currentMusicTrackIndex);
+        localAudioPlayer.play().catch(error => console.error("Erro ao tocar próxima música automaticamente:", error));
+      });
+      localAudioPlayer.addEventListener('error', (e) => {
+        console.error("MediaError no elemento de áudio:", e);
+        let userFriendlyMessage = "Erro ao carregar música.";
+        const failedSrc = e.target && e.target.src ? e.target.src : "desconhecido";
+        const trackName = failedSrc.substring(failedSrc.lastIndexOf('/') + 1) || "faixa desconhecida";
+
+        if (localAudioPlayer.error) {
+          switch (localAudioPlayer.error.code) {
+            case MediaError.MEDIA_ERR_ABORTED: userFriendlyMessage = 'Reprodução abortada.'; break;
+            case MediaError.MEDIA_ERR_NETWORK: userFriendlyMessage = 'Erro de rede ao tentar carregar a música.'; break;
+            case MediaError.MEDIA_ERR_DECODE: userFriendlyMessage = 'Erro ao decodificar. O formato pode não ser suportado ou o arquivo está corrompido.'; break;
+            case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED: userFriendlyMessage = 'Formato de música não suportado ou fonte inválida.'; break;
+            default: userFriendlyMessage = 'Ocorreu um erro desconhecido com esta música.';
+          }
+        }
+        const isExample = exampleTrackPaths.some(examplePath => failedSrc.includes(examplePath));
+        if (isExample) {
+          showMessage("Erro Música de Exemplo",
+            `Falha ao carregar "${trackName}". Verifique se o arquivo está na pasta 'musicas' ou adicione suas músicas à lista 'userMusicTracks' no código HTML.`);
+        } else {
+          showMessage("Erro de Reprodução", `${userFriendlyMessage} (${trackName})`);
+        }
+        if (playerCurrentTrackName) {
+          playerCurrentTrackName.textContent = userFriendlyMessage;
+          playerCurrentTrackName.title = userFriendlyMessage;
+        }
+        if (playerPlayIcon) playerPlayIcon.classList.remove('hidden');
+        if (playerPauseIcon) playerPauseIcon.classList.add('hidden');
+        isMusicPlaying = false;
+      });
+    }
+    if (playerProgressSlider) {
+      playerProgressSlider.addEventListener('input', () => {
+        if (localAudioPlayer) localAudioPlayer.currentTime = playerProgressSlider.value;
+      });
+    }
+
+    if (playerVolumeSlider) playerVolumeSlider.addEventListener('input', (e) => {
+      if (localAudioPlayer) localAudioPlayer.volume = parseInt(e.target.value, 10) / 100;
+    });
+
+    if (localAudioPlayer && playerVolumeSlider) {
+      localAudioPlayer.volume = parseInt(playerVolumeSlider.value, 10) / 100;
+    }
+
+    // --- AI Assistant Functions ---
+    function addMessageToChat(message, sender = 'user') {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('chat-message', 'mb-2', 'p-3', 'rounded-lg', 'max-w-xs', 'md:max-w-md', 'break-words');
+      if (sender === 'user') {
+        messageDiv.classList.add('bg-indigo-500', 'dark:bg-[#00A9C0]', 'text-white', 'dark:text-[#00141A]', 'ml-auto', 'rounded-br-none');
+        messageDiv.textContent = message;
+      } else {
+        messageDiv.classList.add('bg-slate-200', 'dark:bg-[#011E28]', 'text-slate-800', 'dark:text-[#E0E0E0]', 'mr-auto', 'rounded-bl-none');
+        if (message.includes("```")) {
+          const parts = message.split("```");
+          messageDiv.innerHTML = '';
+          parts.forEach((part, index) => {
+            if (part.trim() === "") return;
+            if (index % 2 === 0) {
+              const textNode = document.createElement('p');
+              textNode.textContent = part.trim();
+              if (part.trim()) messageDiv.appendChild(textNode);
+            } else {
+              const pre = document.createElement('pre');
+              const code = document.createElement('code');
+              const langMatch = part.match(/^(\w+)\n/);
+              let codeContent = part;
+              if (langMatch && langMatch[1]) {
+                code.classList.add(`language-${langMatch[1].toLowerCase()}`);
+                codeContent = part.substring(langMatch[0].length);
+                pre.dataset.lang = langMatch[1].toLowerCase();
+              }
+              code.textContent = codeContent.trim();
+              pre.appendChild(code);
+              pre.classList.add('bg-slate-100', 'dark:bg-[#00141A]', 'p-2', 'rounded', 'overflow-x-auto', 'text-sm', 'my-1');
+              messageDiv.appendChild(pre);
+            }
+          });
+        } else {
+          messageDiv.textContent = message;
+        }
+      }
+      if (aiChatBox) {
+        aiChatBox.appendChild(messageDiv);
+        aiChatBox.scrollTop = aiChatBox.scrollHeight;
+      }
+    }
+
+    async function handleAISubmit() {
+      if (!aiInput || !aiLoading || !sendToAiBtn) return;
+      const prompt = aiInput.value.trim();
+      if (!prompt) return;
+
+      addMessageToChat(prompt, 'user');
+      aiInput.value = '';
+      aiLoading.classList.remove('hidden');
+      sendToAiBtn.disabled = true;
+
+      try {
+        let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+        const payload = { contents: chatHistory };
+        const apiKey = ""; // DEIXE EM BRANCO PARA O SISTEMA INJETAR A CHAVE
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("API Error Data:", errorData);
+          throw new Error(`Erro da API: ${errorData.error?.message || response.statusText} (Status: ${response.status})`);
+        }
+        const result = await response.json();
+        if (result.candidates && result.candidates.length > 0 &&
+          result.candidates[0].content && result.candidates[0].content.parts &&
+          result.candidates[0].content.parts.length > 0) {
+          addMessageToChat(result.candidates[0].content.parts[0].text, 'ai');
+        } else if (result.promptFeedback && result.promptFeedback.blockReason) {
+          let blockMessage = "Sua solicitação foi bloqueada pela IA. Razão: ";
+          switch (result.promptFeedback.blockReason) {
+            case "SAFETY": blockMessage += "Conteúdo considerado inseguro."; break;
+            case "OTHER": blockMessage += "Outra razão não especificada."; break;
+            default: blockMessage += result.promptFeedback.blockReason;
+          }
+          if (result.promptFeedback.safetyRatings && result.promptFeedback.safetyRatings.length > 0) {
+            blockMessage += " Detalhes: " + result.promptFeedback.safetyRatings.map(r => `${r.category} - ${r.probability}`).join(", ");
+          }
+          addMessageToChat(blockMessage, 'ai');
+        }
+        else {
+          console.warn("Resposta inesperada da IA:", result);
+          addMessageToChat("Desculpe, não consegui processar sua solicitação no momento (resposta inesperada da IA).", 'ai');
+        }
+      } catch (error) {
+        console.error("Erro ao contatar IA:", error);
+        addMessageToChat(`Desculpe, ocorreu um erro ao contatar a IA: ${error.message}. Verifique o console para mais detalhes.`, 'ai');
+      } finally {
+        aiLoading.classList.add('hidden');
+        sendToAiBtn.disabled = false;
+        aiInput.focus();
+      }
+    }
+
+    // --- Modal Functions ---
+    function openModal(modalElement) {
+      if (!modalElement) return;
+      modalElement.classList.remove('hidden');
+      setTimeout(() => {
+        modalElement.classList.remove('opacity-0');
+        const modalContent = modalElement.querySelector('.modal-content');
+        if (modalContent) {
+          modalContent.style.transform = 'scale(1) translateY(0)';
+          modalContent.style.opacity = '1';
+        }
+      }, 10);
+    }
+
+    function closeModal(modalElement) {
+      if (!modalElement) return;
+      const modalContent = modalElement.querySelector('.modal-content');
+      if (modalContent) {
+        modalContent.style.transform = 'scale(0.95) translateY(10px)';
+        modalContent.style.opacity = '0';
+      }
+      modalElement.classList.add('opacity-0');
+      setTimeout(() => {
+        modalElement.classList.add('hidden');
+      }, 250);
+    }
+
+    function showMessage(title, text) {
+      if (messageModalTitle) messageModalTitle.textContent = title;
+      if (messageModalText) messageModalText.textContent = text;
+      openModal(messageModal);
+    }
+
+    if (messageModalCloseBtn) messageModalCloseBtn.addEventListener('click', () => closeModal(messageModal));
+    if (sendToAiBtn) sendToAiBtn.addEventListener('click', handleAISubmit);
+    if (aiInput) aiInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleAISubmit();
+      }
+    });
+
+    // --- Page Initialization ---
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      applyTheme(currentTheme);
+
+      const titleElement = document.querySelector('header h1');
+      if (titleElement) {
+        titleElement.classList.add('apply-gradient-text');
+      }
+
+      loadPomodoroSettings();
+      const currentYearEl = document.getElementById('current-year');
+      if (currentYearEl) currentYearEl.textContent = new Date().getFullYear();
+
+      initializeMusicPlayer(); // Initialize with hardcoded music list
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && messageModal && !messageModal.classList.contains('hidden')) {
+          closeModal(messageModal);
+        }
+      });
+
+      if (messageModal) {
+        messageModal.addEventListener('click', (e) => {
+          if (e.target === messageModal) {
+            closeModal(messageModal);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>
