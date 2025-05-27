@@ -45,8 +45,8 @@ Este é um projeto puramente front-end (HTML, CSS, JavaScript) e não requer um 
 1.  **Clonar ou Baixar o Projeto:**
     ```bash
     # Se estiver usando Git
-    git clone https://SEU_REPOSITORIO_GIT_AQUI.git
-    cd nome-da-pasta-do-projeto
+    git clone https://github.com/henrique-bohrer/devflow.git
+    cd devflow
     ```
     Ou simplesmente baixe os arquivos HTML.
 
