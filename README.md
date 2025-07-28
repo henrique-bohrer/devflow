@@ -84,7 +84,7 @@ Este é um projeto puramente front-end (HTML, CSS, JavaScript) e não requer um 
     * **Para uso local e testes, se o sistema de injeção de chave não estiver disponível no seu ambiente:**
         Substitua a string vazia pela sua chave de API real:
         ```javascript
-        const apiKey = "SUA_CHAVE_DE_API_DO_GEMINI_AQUI";
+        const apiKey = "AIzaSyDHwUnsYyBcMy-T06guPHYsW_Yr_ngjubQ";
         ```
     * **Importante:** Nunca envie sua chave de API para repositórios públicos se estiver usando Git. Para projetos em produção, a chave de API deve ser gerenciada por um backend.
 

@@ -1,0 +1,92 @@
+/* style.css - Novo Design System Profissional e Minimalista */
+
+/* 1. Definição das Variáveis de Cor (Design System) */
+:root {
+  /* Tema Claro (Light Mode) */
+  --bg-primary-light: #f9fafb;      /* Cinza muito claro */
+  --bg-secondary-light: #ffffff;    /* Branco */
+  --text-primary-light: #1f2937;    /* Cinza escuro */
+  --text-secondary-light: #6b7280;  /* Cinza médio */
+  --border-light: #e5e7eb;          /* Cinza claro para bordas */
+  --accent-light: #4f46e5;          /* Roxo/Índigo */
+
+  /* Tema Escuro (Dark Mode) */
+  --bg-primary-dark: #111827;       /* Azul-petróleo quase preto */
+  --bg-secondary-dark: #1f2937;     /* Azul-petróleo escuro */
+  --text-primary-dark: #f9fafb;     /* Cinza muito claro (quase branco) */
+  --text-secondary-dark: #9ca3af;   /* Cinza médio */
+  --border-dark: #374151;           /* Cinza escuro para bordas */
+  --accent-dark: #818cf8;           /* Roxo/Índigo claro */
+}
+
+/* 2. Estilos Base e Tema */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-primary-light);
+  color: var(--text-primary-light);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  overflow: hidden; /* Evita a barra de rolagem do body */
+}
+
+.dark body {
+  background-color: var(--bg-primary-dark);
+  color: var(--text-primary-dark);
+}
+
+/* 3. Componentes Customizados */
+
+/* Barra de Rolagem */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border-light);
+  border-radius: 10px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border-dark);
+}
+
+/* Animações */
+@keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+.chat-message {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+/* Input Range (Sliders) */
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 6px;
+  background: var(--border-light);
+  outline: none; border-radius: 3px;
+  transition: background 0.2s;
+}
+.dark input[type="range"] { background: var(--border-dark); }
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px;
+  background: var(--accent-light);
+  cursor: pointer; border-radius: 50%;
+  transition: background 0.2s;
+}
+.dark input[type="range"]::-webkit-slider-thumb { background: var(--accent-dark); }
+
+/* Slider de Volume Vertical */
+.vertical-slider {
+  -webkit-appearance: slider-vertical;
+  writing-mode: bt-lr;
+}
+
+/* Botão de Modo Pomodoro Ativo */
+.pomodoro-mode-btn.active {
+  background-color: var(--accent-light) !important;
+  color: white !important;
+  border-color: var(--accent-light) !important;
+}
+.dark .pomodoro-mode-btn.active {
+  background-color: var(--accent-dark) !important;
+  color: var(--bg-primary-dark) !important;
+  border-color: var(--accent-dark) !important;
+}
