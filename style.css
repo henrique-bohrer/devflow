@@ -1,92 +1,180 @@
-/* style.css - Novo Design System Profissional e Minimalista */
+/* ==========================================================================
+   DevFlow Pomodoro - Professional Stylesheet
+   ========================================================================== */
 
-/* 1. Definição das Variáveis de Cor (Design System) */
+/**
+ * 1. DESIGN SYSTEM (TOKENS)
+ * --------------------------------------------------------------------------
+ * Centralizamos todas as decisões de design (cores, fontes, transições)
+ * em variáveis CSS (Custom Properties) para consistência e fácil manutenção.
+ */
+
 :root {
-  /* Tema Claro (Light Mode) */
-  --bg-primary-light: #f9fafb;      /* Cinza muito claro */
-  --bg-secondary-light: #ffffff;    /* Branco */
-  --text-primary-light: #1f2937;    /* Cinza escuro */
-  --text-secondary-light: #6b7280;  /* Cinza médio */
-  --border-light: #e5e7eb;          /* Cinza claro para bordas */
-  --accent-light: #4f46e5;          /* Roxo/Índigo */
+  /* Paleta de Cores - Tema Claro */
+  --color-brand-primary: #4f46e5;
+  --color-brand-secondary: #7c3aed;
+  --color-text-primary: #1f2937;    /* Slate 800 */
+  --color-text-secondary: #6b7280;  /* Slate 500 */
+  --color-bg-primary: #f9fafb;      /* Slate 50 */
+  --color-bg-secondary: #ffffff;
+  --color-border: #e5e7eb;          /* Slate 200 */
 
-  /* Tema Escuro (Dark Mode) */
-  --bg-primary-dark: #111827;       /* Azul-petróleo quase preto */
-  --bg-secondary-dark: #1f2937;     /* Azul-petróleo escuro */
-  --text-primary-dark: #f9fafb;     /* Cinza muito claro (quase branco) */
-  --text-secondary-dark: #9ca3af;   /* Cinza médio */
-  --border-dark: #374151;           /* Cinza escuro para bordas */
-  --accent-dark: #818cf8;           /* Roxo/Índigo claro */
+  /* Paleta de Cores - Acentos (Usados no Tema Escuro) */
+  --color-accent-primary: #00CFE8;
+  --color-accent-secondary: #A076F9;
+
+  /* Tipografia */
+  --font-family-sans: 'Inter', sans-serif;
+
+  /* Transições */
+  --transition-duration: 0.25s;
+  --transition-timing: ease-in-out;
 }
 
-/* 2. Estilos Base e Tema */
+.dark {
+  /* Paleta de Cores - Tema Escuro (Sobrescreve as variáveis do :root) */
+  --color-brand-primary: #6366f1;
+  --color-brand-secondary: #8b5cf6;
+  --color-text-primary: #e5e7eb;    /* Slate 200 */
+  --color-text-secondary: #9ca3af;  /* Slate 400 */
+  --color-bg-primary: #00141A;
+  --color-bg-secondary: #09232B;
+  --color-border: #374151;          /* Slate 700 */
+}
+
+
+/**
+ * 2. ESTILOS GLOBAIS E BASE
+ * --------------------------------------------------------------------------
+ * Regras aplicadas a todo o documento.
+ */
+
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--bg-primary-light);
-  color: var(--text-primary-light);
-  transition: background-color 0.2s ease, color 0.2s ease;
-  overflow: hidden; /* Evita a barra de rolagem do body */
+  font-family: var(--font-family-sans);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color var(--transition-duration) var(--transition-timing),
+              color var(--transition-duration) var(--transition-timing);
 }
 
-.dark body {
-  background-color: var(--bg-primary-dark);
-  color: var(--text-primary-dark);
+main {
+  overflow-y: auto;
 }
 
-/* 3. Componentes Customizados */
 
-/* Barra de Rolagem */
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+/**
+ * 3. COMPONENTES CUSTOMIZADOS
+ * --------------------------------------------------------------------------
+ * Estilos para componentes específicos que requerem mais do que as classes
+ * do Tailwind podem oferecer de forma limpa.
+ */
+
+/* Barra de Rolagem Customizada */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-primary) transparent;
+}
+.dark .custom-scrollbar {
+  scrollbar-color: var(--color-accent-primary) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar { width: 8px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--border-light);
+  background-color: var(--color-brand-primary);
   border-radius: 10px;
 }
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--border-dark);
+  background-color: var(--color-accent-primary);
+}
+
+/* Modal */
+.modal {
+  transition: opacity var(--transition-duration) var(--transition-timing);
+}
+.modal-content {
+  transition: transform var(--transition-duration) var(--transition-timing),
+              opacity var(--transition-duration) var(--transition-timing);
+}
+.modal.opacity-0 .modal-content {
+  transform: scale(0.95) translateY(10px);
+  opacity: 0;
+}
+
+/* Input Range (Slider) */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--color-border);
+  outline: none;
+  border-radius: 3px;
+  transition: background var(--transition-duration) var(--transition-timing);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--color-brand-primary);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background var(--transition-duration) var(--transition-timing);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--color-brand-primary);
+  cursor: pointer;
+  border-radius: 50%;
+  border: none;
+}
+.dark input[type="range"]::-webkit-slider-thumb,
+.dark input[type="range"]::-moz-range-thumb {
+  background: var(--color-accent-primary);
+}
+
+
+/**
+ * 4. CLASSES UTILITÁRIAS E ANIMAÇÕES
+ * --------------------------------------------------------------------------
+ * Classes e animações reutilizáveis.
+ */
+
+/* Texto com Gradiente */
+.title-gradient {
+  background-image: linear-gradient(to right, var(--color-brand-primary), var(--color-brand-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dark .title-gradient {
+  background-image: linear-gradient(to right, var(--color-accent-primary), var(--color-accent-secondary));
 }
 
 /* Animações */
-@keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 .chat-message {
   opacity: 0;
   transform: translateY(10px);
   animation: fadeInUp 0.3s ease-out forwards;
 }
-
-/* Input Range (Sliders) */
-input[type="range"] {
-  -webkit-appearance: none; appearance: none;
-  width: 100%; height: 6px;
-  background: var(--border-light);
-  outline: none; border-radius: 3px;
-  transition: background 0.2s;
-}
-.dark input[type="range"] { background: var(--border-dark); }
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 16px; height: 16px;
-  background: var(--accent-light);
-  cursor: pointer; border-radius: 50%;
-  transition: background 0.2s;
-}
-.dark input[type="range"]::-webkit-slider-thumb { background: var(--accent-dark); }
-
-/* Slider de Volume Vertical */
-.vertical-slider {
-  -webkit-appearance: slider-vertical;
-  writing-mode: bt-lr;
+@keyframes fadeInUp {
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Botão de Modo Pomodoro Ativo */
+.timer-pulse {
+  animation: pulseTimer 0.5s ease-out;
+}
+@keyframes pulseTimer {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* Estilo para Botão de Modo Ativo (exemplo de como integrar com variáveis) */
 .pomodoro-mode-btn.active {
-  background-color: var(--accent-light) !important;
-  color: white !important;
-  border-color: var(--accent-light) !important;
+  box-shadow: 0 0 0 2px var(--color-bg-secondary), 0 0 0 4px var(--color-brand-secondary);
 }
 .dark .pomodoro-mode-btn.active {
-  background-color: var(--accent-dark) !important;
-  color: var(--bg-primary-dark) !important;
-  border-color: var(--accent-dark) !important;
+  box-shadow: 0 0 0 2px var(--color-bg-secondary), 0 0 0 4px var(--color-accent-primary);
 }
