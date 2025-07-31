@@ -1,180 +1,247 @@
-/* ==========================================================================
-   DevFlow Pomodoro - Professional Stylesheet
-   ========================================================================== */
-
-/**
- * 1. DESIGN SYSTEM (TOKENS)
- * --------------------------------------------------------------------------
- * Centralizamos todas as decisões de design (cores, fontes, transições)
- * em variáveis CSS (Custom Properties) para consistência e fácil manutenção.
- */
-
+/* ===== VARIABLES ===== */
 :root {
-  /* Paleta de Cores - Tema Claro */
-  --color-brand-primary: #4f46e5;
-  --color-brand-secondary: #7c3aed;
-  --color-text-primary: #1f2937;    /* Slate 800 */
-  --color-text-secondary: #6b7280;  /* Slate 500 */
-  --color-bg-primary: #f9fafb;      /* Slate 50 */
-  --color-bg-secondary: #ffffff;
-  --color-border: #e5e7eb;          /* Slate 200 */
+  /* Light Theme */
+  --bg-light: #F8FAFC;
+  --bg-secondary-light: #F1F5F9;
+  --card-light: rgba(255, 255, 255, 0.85);
+  --card-hover-light: rgba(255, 255, 255, 0.95);
+  --text-primary-light: #0F172A;
+  --text-secondary-light: #475569;
+  --text-muted-light: #64748B;
+  --border-light: rgba(15, 23, 42, 0.1);
+  --shadow-light: rgba(15, 23, 42, 0.1);
 
-  /* Paleta de Cores - Acentos (Usados no Tema Escuro) */
-  --color-accent-primary: #00CFE8;
-  --color-accent-secondary: #A076F9;
+  /* Dark Theme */
+  --bg-dark: #0D1117;
+  --bg-secondary-dark: #161B22;
+  --card-dark: rgba(22, 27, 34, 0.85);
+  --card-hover-dark: rgba(22, 27, 34, 0.95);
+  --text-primary-dark: #E6EDF3;
+  --text-secondary-dark: #8B949E;
+  --text-muted-dark: #656D76;
+  --border-dark: rgba(230, 237, 243, 0.1);
+  --shadow-dark: rgba(0, 0, 0, 0.5);
 
-  /* Tipografia */
-  --font-family-sans: 'Inter', sans-serif;
+  /* Brand Colors */
+  --primary-blue: #2563EB;
+  --primary-blue-hover: #1D4ED8;
+  --secondary-green: #10B981;
+  --secondary-green-hover: #059669;
+  --accent-purple: #8B5CF6;
+  --accent-orange: #F59E0B;
+  --danger-red: #EF4444;
+  --warning-yellow: #F59E0B;
+  --success-green: #10B981;
 
-  /* Transições */
-  --transition-duration: 0.25s;
-  --transition-timing: ease-in-out;
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--primary-blue), var(--accent-purple));
+  --gradient-secondary: linear-gradient(135deg, var(--secondary-green), var(--primary-blue));
+  --gradient-danger: linear-gradient(135deg, var(--danger-red), #DC2626);
+  --gradient-warning: linear-gradient(135deg, var(--warning-yellow), #D97706);
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* Z-Index */
+  --z-background: 0;
+  --z-content: 10;
+  --z-header: 20;
+  --z-overlay: 30;
+  --z-modal: 40;
+  --z-notification: 50;
 }
 
-.dark {
-  /* Paleta de Cores - Tema Escuro (Sobrescreve as variáveis do :root) */
-  --color-brand-primary: #6366f1;
-  --color-brand-secondary: #8b5cf6;
-  --color-text-primary: #e5e7eb;    /* Slate 200 */
-  --color-text-secondary: #9ca3af;  /* Slate 400 */
-  --color-bg-primary: #00141A;
-  --color-bg-secondary: #09232B;
-  --color-border: #374151;          /* Slate 700 */
+/* ===== RESET & BASE ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-
-/**
- * 2. ESTILOS GLOBAIS E BASE
- * --------------------------------------------------------------------------
- * Regras aplicadas a todo o documento.
- */
+html {
+  scroll-behavior: smooth;
+}
 
 body {
-  font-family: var(--font-family-sans);
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  transition: background-color var(--transition-duration) var(--transition-timing),
-              color var(--transition-duration) var(--transition-timing);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary-light);
+  background-color: var(--bg-light);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+  overflow-x: hidden;
 }
 
-main {
-  overflow-y: auto;
+body.dark {
+  color: var(--text-primary-dark);
+  background-color: var(--bg-dark);
 }
 
+/* ===== BACKGROUND ===== */
+.background-gradient {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-background);
+  opacity: 0.8;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+  animation: gradientShift 20s ease-in-out infinite alternate;
+}
 
-/**
- * 3. COMPONENTES CUSTOMIZADOS
- * --------------------------------------------------------------------------
- * Estilos para componentes específicos que requerem mais do que as classes
- * do Tailwind podem oferecer de forma limpa.
- */
+body.dark .background-gradient {
+  opacity: 0.6;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+}
 
-/* Barra de Rolagem Customizada */
+/* ===== LAYOUT ===== */
+.main-container {
+  position: relative;
+  z-index: var(--z-content);
+  min-height: 100vh;
+  padding: var(--space-md) var(--space-md) 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content-grid {
+  width: 100%;
+  max-width: 1400px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+.timer-ai-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+
+  .main-container {
+    padding: var(--space-md) var(--space-sm) 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-grid {
+    gap: var(--space-md);
+  }
+
+  .main-container {
+    padding: var(--space-sm) var(--space-sm) 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-container {
+    padding: var(--space-sm) var(--space-xs) 120px;
+  }
+}
+
+/* ===== SCROLLBAR ===== */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-brand-primary) transparent;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
-.dark .custom-scrollbar {
-  scrollbar-color: var(--color-accent-primary) transparent;
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
-.custom-scrollbar::-webkit-scrollbar { width: 8px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--color-brand-primary);
-  border-radius: 10px;
-}
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--color-accent-primary);
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-full);
+  transition: background-color var(--transition-fast);
 }
 
-/* Modal */
-.modal {
-  transition: opacity var(--transition-duration) var(--transition-timing);
-}
-.modal-content {
-  transition: transform var(--transition-duration) var(--transition-timing),
-              opacity var(--transition-duration) var(--transition-timing);
-}
-.modal.opacity-0 .modal-content {
-  transform: scale(0.95) translateY(10px);
-  opacity: 0;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
-/* Input Range (Slider) */
-input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 6px;
-  background: var(--color-border);
-  outline: none;
-  border-radius: 3px;
-  transition: background var(--transition-duration) var(--transition-timing);
-}
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  background: var(--color-brand-primary);
-  cursor: pointer;
-  border-radius: 50%;
-  transition: background var(--transition-duration) var(--transition-timing);
-}
-input[type="range"]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: var(--color-brand-primary);
-  cursor: pointer;
-  border-radius: 50%;
-  border: none;
-}
-.dark input[type="range"]::-webkit-slider-thumb,
-.dark input[type="range"]::-moz-range-thumb {
-  background: var(--color-accent-primary);
+body.dark .custom-scrollbar {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
+body.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
 
-/**
- * 4. CLASSES UTILITÁRIAS E ANIMAÇÕES
- * --------------------------------------------------------------------------
- * Classes e animações reutilizáveis.
- */
+body.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
 
-/* Texto com Gradiente */
-.title-gradient {
-  background-image: linear-gradient(to right, var(--color-brand-primary), var(--color-brand-secondary));
+/* ===== UTILITIES ===== */
+.hidden {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-gradient {
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   background-clip: text;
-  color: transparent;
-}
-.dark .title-gradient {
-  background-image: linear-gradient(to right, var(--color-accent-primary), var(--color-accent-secondary));
 }
 
-/* Animações */
-.chat-message {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeInUp 0.3s ease-out forwards;
-}
-@keyframes fadeInUp {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.timer-pulse {
-  animation: pulseTimer 0.5s ease-out;
-}
-@keyframes pulseTimer {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
-}
-
-/* Estilo para Botão de Modo Ativo (exemplo de como integrar com variáveis) */
-.pomodoro-mode-btn.active {
-  box-shadow: 0 0 0 2px var(--color-bg-secondary), 0 0 0 4px var(--color-brand-secondary);
-}
-.dark .pomodoro-mode-btn.active {
-  box-shadow: 0 0 0 2px var(--color-bg-secondary), 0 0 0 4px var(--color-accent-primary);
+/* ===== FOCUS STYLES ===== */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
 }
