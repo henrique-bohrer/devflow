@@ -9,9 +9,6 @@ const cyclesCountDisplay = document.getElementById('cycles-count-display');
 const currentModeDisplay = document.getElementById('current-mode-display');
 const modeButtons = document.querySelectorAll('.pomodoro-mode-btn');
 const notificationSound = document.getElementById('notification-sound');
-const taskForm = document.getElementById('task-form');
-const taskInput = document.getElementById('task-input');
-const taskList = document.getElementById('task-list');
 const localAudioPlayer = document.getElementById('local-audio-player');
 const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
 const playerPlayIcon = document.getElementById('player-play-icon');
@@ -24,14 +21,12 @@ const prevPresetBtn = document.getElementById('prev-preset-btn');
 const nextPresetBtn = document.getElementById('next-preset-btn');
 const volumeTooltip = document.getElementById('volume-tooltip');
 
-// Elementos do Patinho Ajudante
-const openDuckChatBtn = document.getElementById('open-duck-chat-btn');
-const closeDuckChatBtn = document.getElementById('close-duck-chat-btn');
-const duckChatModal = document.getElementById('duck-chat-modal');
-const duckChatContainer = document.getElementById('duck-chat-container');
-const duckChatBody = document.getElementById('duck-chat-body');
-const duckChatForm = document.getElementById('duck-chat-form');
-const duckChatInput = document.getElementById('duck-chat-input');
+// Elementos da Lista de Tarefas (agora no painel)
+const taskPanel = document.getElementById('task-panel');
+const toggleTasksBtn = document.getElementById('toggle-tasks-btn');
+const taskForm = document.getElementById('task-form');
+const taskInput = document.getElementById('task-input');
+const taskList = document.getElementById('task-list');
 
 let timerInterval;
 let timeLeft;
@@ -52,82 +47,6 @@ let isPaused = true;
 let currentMode = 'focus';
 let notificationPermission = "default";
 let tasks = JSON.parse(localStorage.getItem('pomodoroTasks')) || [];
-let chatHistory = [];
-
-// --- LÓGICA DO PATINHO AJUDANTE ---
-const DUCK_PERSONALITY_PROMPT = `Você é o 'Patinho DevFlow', um amigável pato de borracha assistente para programadores. Sua missão é ajudar os usuários a resolverem seus próprios problemas através do método 'Rubber Duck Debugging'. Nunca dê a solução direta ou escreva código. Em vez disso, faça perguntas abertas e guiadas para que o usuário pense sobre o problema. Use frases curtas, encorajadoras e um tom amigável. Comece suas respostas com 'Quack!'.`;
-
-function openDuckChat() {
-    duckChatModal.classList.remove('hidden');
-    setTimeout(() => duckChatContainer.classList.add('scale-100', 'opacity-100'), 10);
-    if (chatHistory.length === 0) {
-        addMessageToDuckChat("Quack! Olá! Estou aqui para ajudar. Qual problema você está tentando resolver hoje?", 'duck');
-    }
-}
-
-function closeDuckChat() {
-    duckChatContainer.classList.remove('scale-100', 'opacity-100');
-    setTimeout(() => duckChatModal.classList.add('hidden'), 300);
-}
-
-function addMessageToDuckChat(message, sender) {
-    const messageEl = document.createElement('div');
-    const isUser = sender === 'user';
-    messageEl.className = `w-fit max-w-xs md:max-w-md p-3 rounded-2xl mb-3 ${isUser ? 'bg-indigo-600 text-white ml-auto rounded-br-lg' : 'bg-slate-700 text-slate-200 mr-auto rounded-bl-lg'}`;
-    messageEl.textContent = message;
-    duckChatBody.appendChild(messageEl);
-    duckChatBody.scrollTop = duckChatBody.scrollHeight;
-}
-
-async function handleDuckChatSubmit(e) {
-    e.preventDefault();
-    const userInput = duckChatInput.value.trim();
-    if (!userInput) return;
-
-    addMessageToDuckChat(userInput, 'user');
-    duckChatInput.value = '';
-
-    chatHistory.push({ role: "user", parts: [{ text: userInput }] });
-
-    const typingIndicator = document.createElement('div');
-    typingIndicator.className = 'w-fit max-w-xs p-3 rounded-2xl mb-3 bg-slate-700 text-slate-400 mr-auto rounded-bl-lg';
-    typingIndicator.innerHTML = '<span class="animate-pulse">Quack... (pensando)</span>';
-    duckChatBody.appendChild(typingIndicator);
-    duckChatBody.scrollTop = duckChatBody.scrollHeight;
-
-    try {
-        const response = await fetch('gemini-proxy.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [
-                    { role: "user", parts: [{ text: DUCK_PERSONALITY_PROMPT }] },
-                    { role: "model", parts: [{ text: "Quack! Entendido. Estou pronto para ajudar." }] },
-                    ...chatHistory
-                ]
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error.message || `API Error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const duckResponse = data.candidates[0].content.parts[0].text;
-
-        chatHistory.push({ role: "model", parts: [{ text: duckResponse }] });
-
-        duckChatBody.removeChild(typingIndicator);
-        addMessageToDuckChat(duckResponse, 'duck');
-
-    } catch (error) {
-        duckChatBody.removeChild(typingIndicator);
-        addMessageToDuckChat(`Quack! Ocorreu um erro de conexão. Tente novamente. (${error.message})`, 'duck');
-    }
-}
-
-// --- FIM DA LÓGICA DO PATINHO ---
 
 function updatePresetDisplay(isInitial = false, direction = 0) {
     const currentPresetKey = presetKeys[currentPresetIndex];
@@ -164,7 +83,6 @@ function navigatePresets(direction) {
     updatePresetDisplay(false, direction);
 }
 
-// ✅ --- LÓGICA DA RÁDIO CORRIGIDA ---
 function setupRadioPlayer() {
     const lofiStreamURL = 'http://stream.laut.fm/lofi';
     localAudioPlayer.src = lofiStreamURL;
@@ -173,14 +91,12 @@ function setupRadioPlayer() {
 
 function toggleMusicPlayer() {
     if (localAudioPlayer.paused) {
-        localAudioPlayer.load(); // Essencial para reiniciar o stream se ele parar
+        localAudioPlayer.load();
         localAudioPlayer.play().catch(e => console.error("Erro ao tocar rádio:", e));
     } else {
         localAudioPlayer.pause();
     }
 }
-// --- FIM DA LÓGICA DA RÁDIO ---
-
 
 function applyPreset(presetKey) {
     if (!presetKey || !pomodoroPresets[presetKey]) return;
@@ -205,6 +121,7 @@ function updateTimerDisplay() {
     const seconds = timeLeft % 60;
     timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     document.title = `${timerDisplay.textContent} - DevFlow Pomodoro`;
+
     timerDisplay.classList.remove('timer-tick');
     void timerDisplay.offsetWidth;
     timerDisplay.classList.add('timer-tick');
@@ -281,12 +198,12 @@ function renderTasks() {
     if (!taskList) return;
     taskList.innerHTML = '';
     if (tasks.length === 0) {
-        taskList.innerHTML = `<li class="text-center text-slate-500 dark:text-slate-400 p-2">Nenhuma tarefa adicionada.</li>`;
+        taskList.innerHTML = `<li class="text-center text-slate-400 p-2">Nenhuma tarefa adicionada.</li>`;
         return;
     }
     tasks.forEach((task, index) => {
         const li = document.createElement('li');
-        li.className = `flex items-center justify-between p-3 rounded-lg transition-colors ${task.done ? 'bg-green-500/10 text-slate-500' : 'bg-slate-100 dark:bg-slate-800'}`;
+        li.className = `flex items-center justify-between p-3 rounded-lg transition-colors ${task.done ? 'bg-green-500/10 text-slate-500' : 'bg-slate-700'}`;
         li.innerHTML = `
             <span class="flex-grow cursor-pointer ${task.done ? 'line-through' : ''}" data-action="toggle" data-index="${index}">${task.text}</span>
             <button data-action="delete" data-index="${index}" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
@@ -357,12 +274,10 @@ document.addEventListener('DOMContentLoaded', () => {
     taskForm.addEventListener('submit', addTask);
     taskList.addEventListener('click', handleTaskListClick);
 
-    openDuckChatBtn.addEventListener('click', openDuckChat);
-    closeDuckChatBtn.addEventListener('click', closeDuckChat);
-    duckChatModal.addEventListener('click', (e) => {
-        if (e.target === duckChatModal) closeDuckChat();
+    // ✅ Lógica para o painel de tarefas
+    toggleTasksBtn.addEventListener('click', () => {
+        taskPanel.classList.toggle('is-open');
     });
-    duckChatForm.addEventListener('submit', handleDuckChatSubmit);
 
     currentYearSpan.textContent = new Date().getFullYear();
 

@@ -42,6 +42,26 @@ body {
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 10px; }
 
+/* ===== TASK PANEL ===== */
+.task-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 380px;
+  max-width: 90vw;
+  height: 100%;
+  background-color: #162135; /* Um pouco mais escuro que o card */
+  border-left: 1px solid var(--border-color);
+  box-shadow: -10px 0px 30px rgba(0,0,0,0.2);
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 45; /* Abaixo do botão de toggle */
+}
+.task-panel.is-open {
+  transform: translateX(0);
+}
+
+
 /* ===== PRESET PICKER ===== */
 .preset-display {
   width: 180px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 700; border: 2px solid #ffffff; color: #ffffff; border-radius: 0.75rem; transition: all 0.2s ease;
@@ -75,9 +95,3 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
   position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background-color: var(--bg-card); color: var(--text-primary); padding: 4px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
 }
 #volume-control-container:hover .volume-tooltip { opacity: 1; }
-
-/* ===== DUCK CHAT STYLES ===== */
-#duck-chat-modal.visible #duck-chat-container {
-    transform: scale(1);
-    opacity: 1;
-}
