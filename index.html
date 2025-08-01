@@ -13,8 +13,6 @@
 
 <body class="bg-slate-900 overflow-x-hidden">
 
-  <!-- Botão de tema removido -->
-
   <main class="flex-grow p-4 md:p-6 pb-32">
     <div class="w-full max-w-md mx-auto flex flex-col items-center">
       <header class="text-center mb-8 w-full">
@@ -85,40 +83,36 @@
 
   <footer id="footer-music-player"
     class="fixed bottom-0 left-0 w-full bg-slate-900/70 backdrop-blur-xl border-t border-slate-800 z-40">
-    <!-- ✅ Player com alinhamento corrigido -->
     <div class="max-w-xl mx-auto p-4 flex items-center justify-between gap-4">
       <div class="flex items-center gap-4 flex-shrink-0">
         <button id="player-prev-btn"
-          class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
-          disabled><i class="fa-solid fa-backward-step fa-lg"></i></button>
+          class="w-10 h-10 flex items-center justify-center text-slate-600 cursor-not-allowed" disabled><i
+            class="fa-solid fa-backward-step fa-lg"></i></button>
         <button id="player-play-pause-btn"
-          class="w-12 h-12 flex items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transform hover:scale-105 transition-transform"
-          disabled>
+          class="w-12 h-12 flex items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transform hover:scale-105 transition-transform">
           <i id="player-play-icon" class="fa-solid fa-play fa-lg"></i>
           <i id="player-pause-icon" class="fa-solid fa-pause fa-lg hidden"></i>
         </button>
         <button id="player-next-btn"
-          class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
-          disabled><i class="fa-solid fa-forward-step fa-lg"></i></button>
+          class="w-10 h-10 flex items-center justify-center text-slate-600 cursor-not-allowed" disabled><i
+            class="fa-solid fa-forward-step fa-lg"></i></button>
       </div>
 
       <div class="w-full flex-grow flex flex-col gap-1.5 mx-4">
-        <p id="player-current-track-name" class="font-semibold text-sm truncate text-center">Nenhuma música</p>
-        <div class="w-full flex items-center gap-2">
-          <span id="player-current-time" class="text-xs text-slate-500 w-10 text-center">0:00</span>
-          <input type="range" id="player-progress-slider" value="0" class="player-slider">
-          <span id="player-total-time" class="text-xs text-slate-500 w-10 text-center">0:00</span>
-        </div>
+        <p id="player-current-track-name" class="font-semibold text-sm truncate text-center">Rádio Lo-Fi</p>
+        <!-- Controles de progresso removidos -->
+        <div class="w-full h-2"></div> <!-- Placeholder para manter o alinhamento -->
       </div>
 
-      <div class="flex items-center gap-2 flex-shrink-0">
+      <div id="volume-control-container" class="flex items-center gap-2 flex-shrink-0 relative">
         <i class="fa-solid fa-volume-low text-slate-500"></i>
-        <input type="range" id="player-volume-slider" value="80" class="w-20 player-slider">
+        <span id="volume-tooltip" class="volume-tooltip">50%</span>
+        <input type="range" id="player-volume-slider" value="50" class="w-20 player-slider">
       </div>
     </div>
   </footer>
 
-  <audio id="local-audio-player"></audio>
+  <audio id="local-audio-player" preload="none"></audio>
   <audio id="notification-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"
     preload="auto"></audio>
   <script src="script.js"></script>

@@ -1,7 +1,5 @@
 'use strict';
 
-// Lógica de tema removida
-
 // Elementos do DOM
 const timerDisplay = document.getElementById('timer-display');
 const startTimerBtn = document.getElementById('start-timer-btn');
@@ -18,17 +16,13 @@ const localAudioPlayer = document.getElementById('local-audio-player');
 const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
 const playerPlayIcon = document.getElementById('player-play-icon');
 const playerPauseIcon = document.getElementById('player-pause-icon');
-const playerPrevBtn = document.getElementById('player-prev-btn');
-const playerNextBtn = document.getElementById('player-next-btn');
 const playerVolumeSlider = document.getElementById('player-volume-slider');
 const playerCurrentTrackName = document.getElementById('player-current-track-name');
-const playerProgressSlider = document.getElementById('player-progress-slider');
-const playerCurrentTime = document.getElementById('player-current-time');
-const playerTotalTime = document.getElementById('player-total-time');
 const currentYearSpan = document.getElementById('current-year');
 const presetDisplay = document.getElementById('preset-display');
 const prevPresetBtn = document.getElementById('prev-preset-btn');
 const nextPresetBtn = document.getElementById('next-preset-btn');
+const volumeTooltip = document.getElementById('volume-tooltip');
 
 let timerInterval;
 let timeLeft;
@@ -47,12 +41,10 @@ let focusDuration, shortBreakDuration, longBreakDuration, cyclesBeforeLongBreak;
 let currentCycleCount = 0;
 let isPaused = true;
 let currentMode = 'focus';
-let userMusicTracks = [];
-let currentMusicTrackIndex = 0;
-let isMusicPlaying = false;
 let notificationPermission = "default";
 let tasks = JSON.parse(localStorage.getItem('pomodoroTasks')) || [];
 
+// --- LÓGICA DO SELETOR DE CICLO ---
 function updatePresetDisplay(isInitial = false, direction = 0) {
     const currentPresetKey = presetKeys[currentPresetIndex];
     const presetName = pomodoroPresets[currentPresetKey].name;
@@ -91,15 +83,20 @@ function navigatePresets(direction) {
     updatePresetDisplay(false, direction);
 }
 
-async function fetchPlaylistAndInitializePlayer() {
-    try {
-        const response = await fetch('playlist.json?v=' + new Date().getTime());
-        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-        userMusicTracks = await response.json();
-        initializeMusicPlayer();
-    } catch (error) {
-        console.error("Não foi possível carregar playlist.json:", error);
-        playerCurrentTrackName.textContent = "Erro na Playlist";
+// --- LÓGICA DA RÁDIO ONLINE ---
+function setupRadioPlayer() {
+    // ✅ URL do stream de rádio ATUALIZADA para uma fonte mais estável.
+    const lofiStreamURL = 'http://stream.laut.fm/lofi';
+    localAudioPlayer.src = lofiStreamURL;
+    playerCurrentTrackName.textContent = 'Rádio Lo-Fi';
+}
+
+function toggleMusicPlayer() {
+    if (localAudioPlayer.paused) {
+        localAudioPlayer.load(); // Essencial para reiniciar o stream se ele parar
+        localAudioPlayer.play().catch(e => console.error("Erro ao tocar rádio:", e));
+    } else {
+        localAudioPlayer.pause();
     }
 }
 
@@ -185,38 +182,6 @@ function pauseTimer() {
     pauseTimerBtn.classList.add('hidden');
 }
 
-function formatTime(seconds) {
-    const min = Math.floor(seconds / 60);
-    const sec = Math.floor(seconds % 60);
-    return `${min}:${String(sec).padStart(2, '0')}`;
-}
-
-function initializeMusicPlayer() {
-    if (userMusicTracks.length > 0) {
-        [playerPlayPauseBtn, playerPrevBtn, playerNextBtn].forEach(btn => btn.disabled = false);
-        loadMusicTrack(0);
-    } else {
-        playerCurrentTrackName.textContent = "Playlist Vazia";
-    }
-}
-
-function loadMusicTrack(index) {
-    currentMusicTrackIndex = (index + userMusicTracks.length) % userMusicTracks.length;
-    const track = userMusicTracks[currentMusicTrackIndex];
-    if (track && track.file) {
-        localAudioPlayer.src = track.file;
-        playerCurrentTrackName.textContent = track.title || "Faixa Desconhecida";
-    }
-}
-
-function toggleMusicPlayer() {
-    if (localAudioPlayer.paused) {
-        localAudioPlayer.play().catch(e => console.error("Erro ao tocar música:", e));
-    } else {
-        localAudioPlayer.pause();
-    }
-}
-
 function requestNotificationPermission() {
     if ('Notification' in window && Notification.permission !== 'granted') {
         Notification.requestPermission().then(p => notificationPermission = p);
@@ -272,9 +237,18 @@ function handleTaskListClick(e) {
     renderTasks();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Lógica de tema removida
+function updateVolumeSlider() {
+    const volume = playerVolumeSlider.value;
+    const percentage = `${volume}%`;
+    volumeTooltip.textContent = percentage;
+    const sliderWidth = playerVolumeSlider.offsetWidth;
+    const thumbPosition = (volume / 100) * sliderWidth;
+    const tooltipOffset = thumbPosition - (volumeTooltip.offsetWidth / 2) + 8;
+    volumeTooltip.style.left = `${tooltipOffset}px`;
+    playerVolumeSlider.style.background = `linear-gradient(to right, var(--accent-primary) ${percentage}, var(--border-color) ${percentage})`;
+}
 
+document.addEventListener('DOMContentLoaded', () => {
     startTimerBtn.addEventListener('click', startTimer);
     pauseTimerBtn.addEventListener('click', pauseTimer);
     resetTimerBtn.addEventListener('click', () => setMode('focus', true));
@@ -284,22 +258,20 @@ document.addEventListener('DOMContentLoaded', () => {
     nextPresetBtn.addEventListener('click', () => navigatePresets(1));
 
     playerPlayPauseBtn.addEventListener('click', toggleMusicPlayer);
-    playerPrevBtn.addEventListener('click', () => { loadMusicTrack(currentMusicTrackIndex - 1); if (isMusicPlaying) localAudioPlayer.play(); });
-    playerNextBtn.addEventListener('click', () => { loadMusicTrack(currentMusicTrackIndex + 1); if (isMusicPlaying) localAudioPlayer.play(); });
 
-    localAudioPlayer.addEventListener('play', () => { isMusicPlaying = true; playerPlayIcon.classList.add('hidden'); playerPauseIcon.classList.remove('hidden'); });
-    localAudioPlayer.addEventListener('pause', () => { isMusicPlaying = false; playerPlayIcon.classList.remove('hidden'); playerPauseIcon.classList.add('hidden'); });
-    localAudioPlayer.addEventListener('ended', () => playerNextBtn.click());
-    localAudioPlayer.addEventListener('loadedmetadata', () => playerTotalTime.textContent = formatTime(localAudioPlayer.duration));
-    localAudioPlayer.addEventListener('timeupdate', () => {
-        playerCurrentTime.textContent = formatTime(localAudioPlayer.currentTime);
-        if(document.activeElement !== playerProgressSlider) playerProgressSlider.value = localAudioPlayer.currentTime;
-        playerProgressSlider.max = localAudioPlayer.duration || 0;
+    localAudioPlayer.addEventListener('play', () => {
+        playerPlayIcon.classList.add('hidden');
+        playerPauseIcon.classList.remove('hidden');
+    });
+    localAudioPlayer.addEventListener('pause', () => {
+        playerPlayIcon.classList.remove('hidden');
+        playerPauseIcon.classList.add('hidden');
     });
 
-    playerProgressSlider.addEventListener('input', (e) => localAudioPlayer.currentTime = e.target.value);
-    playerVolumeSlider.addEventListener('input', (e) => localAudioPlayer.volume = e.target.value / 100);
-    localAudioPlayer.volume = playerVolumeSlider.value / 100;
+    playerVolumeSlider.addEventListener('input', () => {
+        localAudioPlayer.volume = playerVolumeSlider.value / 100;
+        updateVolumeSlider();
+    });
 
     taskForm.addEventListener('submit', addTask);
     taskList.addEventListener('click', handleTaskListClick);
@@ -307,8 +279,9 @@ document.addEventListener('DOMContentLoaded', () => {
     currentYearSpan.textContent = new Date().getFullYear();
 
     loadPomodoroSettings();
+    updateVolumeSlider();
+    setupRadioPlayer(); // Configura a rádio
 
-    fetchPlaylistAndInitializePlayer();
     requestNotificationPermission();
     renderTasks();
 });
