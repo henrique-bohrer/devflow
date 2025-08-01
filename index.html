@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR">
 
 <head>
   <meta charset="UTF-8">
@@ -11,37 +11,35 @@
   <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="bg-slate-100 dark:bg-slate-900">
+<body class="bg-slate-900 overflow-x-hidden">
 
-  <button id="theme-toggle"
-    class="fixed top-4 right-4 h-12 w-12 flex items-center justify-center rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition-colors duration-200 z-50 shadow-lg">
-    <i id="theme-toggle-dark-icon" class="fa-solid fa-moon text-lg"></i>
-    <i id="theme-toggle-light-icon" class="fa-solid fa-sun text-lg"></i>
-  </button>
+  <!-- Botão de tema removido -->
 
   <main class="flex-grow p-4 md:p-6 pb-32">
     <div class="w-full max-w-md mx-auto flex flex-col items-center">
       <header class="text-center mb-8 w-full">
         <h1 class="text-4xl md:text-5xl font-bold title-gradient">DevFlow Pomodoro</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-2">Uma ferramenta simples para máxima produtividade.</p>
+        <p class="text-slate-400 mt-2">Uma ferramenta simples para máxima produtividade.</p>
       </header>
 
       <section id="pomodoro-section"
-        class="w-full bg-card-light dark:bg-card-dark p-6 sm:p-8 rounded-2xl shadow-2xl border border-transparent dark:border-slate-800">
+        class="w-full bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-2xl border border-slate-700">
         <h2 id="current-mode-display"
-          class="text-2xl font-semibold mb-4 text-center text-indigo-500 dark:text-indigo-400 transition-colors duration-300">
-          Modo Foco</h2>
-        <div id="timer-display"
-          class="text-7xl sm:text-8xl font-extrabold text-center my-6 text-slate-800 dark:text-slate-100">25:00</div>
+          class="text-2xl font-semibold mb-4 text-center text-indigo-400 transition-colors duration-300">Modo Foco</h2>
+        <div id="timer-display" class="text-7xl sm:text-8xl font-extrabold text-center my-6 text-slate-100">25:00</div>
 
         <div class="my-6">
-          <select id="pomodoro-preset-select"
-            class="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
-            <option value="test">Teste (1min)</option>
-            <option value="default" selected>Padrão (4x25min)</option>
-            <option value="intense">Foco Intenso (4x30min)</option>
-            <option value="long">Sessão Longa (2x50min)</option>
-          </select>
+          <div class="flex items-center justify-center space-x-4">
+            <button id="prev-preset-btn" class="preset-nav-btn">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div id="preset-display" class="preset-display">
+              <!-- Nome do ciclo ativo será inserido aqui -->
+            </div>
+            <button id="next-preset-btn" class="preset-nav-btn">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
 
         <div class="grid grid-cols-3 gap-3 mb-6">
@@ -64,15 +62,14 @@
         </div>
 
         <div class="mt-6 text-center">
-          <p class="text-sm text-slate-500 dark:text-slate-400">Ciclos Completos: <span
-              id="cycles-count-display">0</span></p>
+          <p class="text-sm text-slate-400">Ciclos Completos: <span id="cycles-count-display">0</span></p>
         </div>
 
-        <div id="task-list-section" class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
-          <h3 class="text-lg font-semibold mb-4 text-center text-slate-700 dark:text-slate-300">Tarefas da Sessão</h3>
+        <div id="task-list-section" class="mt-8 pt-6 border-t border-slate-700">
+          <h3 class="text-lg font-semibold mb-4 text-center text-slate-300">Tarefas da Sessão</h3>
           <form id="task-form" class="flex gap-3 mb-4">
             <input type="text" id="task-input" placeholder="Adicionar nova tarefa..."
-              class="flex-grow p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+              class="flex-grow p-3 border border-slate-700 rounded-lg bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
             <button type="submit"
               class="py-3 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200">Add</button>
           </form>
@@ -81,30 +78,31 @@
       </section>
 
       <footer class="text-center mt-12 py-6 w-full">
-        <p class="text-sm text-slate-500 dark:text-slate-400">&copy; <span id="current-year">2025</span> DevFlow</p>
+        <p class="text-sm text-slate-400">&copy; <span id="current-year"></span> DevFlow</p>
       </footer>
     </div>
   </main>
 
   <footer id="footer-music-player"
-    class="fixed bottom-0 left-0 w-full bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 z-40">
-    <div class="max-w-xl mx-auto p-4 flex items-center gap-4">
+    class="fixed bottom-0 left-0 w-full bg-slate-900/70 backdrop-blur-xl border-t border-slate-800 z-40">
+    <!-- ✅ Player com alinhamento corrigido -->
+    <div class="max-w-xl mx-auto p-4 flex items-center justify-between gap-4">
       <div class="flex items-center gap-4 flex-shrink-0">
         <button id="player-prev-btn"
-          class="w-10 h-10 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white transition-colors"
+          class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
           disabled><i class="fa-solid fa-backward-step fa-lg"></i></button>
         <button id="player-play-pause-btn"
           class="w-12 h-12 flex items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transform hover:scale-105 transition-transform"
           disabled>
-          <i id="player-play-icon" class="fa-solid fa-play fa-lg ml-1"></i>
+          <i id="player-play-icon" class="fa-solid fa-play fa-lg"></i>
           <i id="player-pause-icon" class="fa-solid fa-pause fa-lg hidden"></i>
         </button>
         <button id="player-next-btn"
-          class="w-10 h-10 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white transition-colors"
+          class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
           disabled><i class="fa-solid fa-forward-step fa-lg"></i></button>
       </div>
 
-      <div class="w-full flex flex-col gap-1.5">
+      <div class="w-full flex-grow flex flex-col gap-1.5 mx-4">
         <p id="player-current-track-name" class="font-semibold text-sm truncate text-center">Nenhuma música</p>
         <div class="w-full flex items-center gap-2">
           <span id="player-current-time" class="text-xs text-slate-500 w-10 text-center">0:00</span>
@@ -113,7 +111,7 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-shrink-0">
         <i class="fa-solid fa-volume-low text-slate-500"></i>
         <input type="range" id="player-volume-slider" value="80" class="w-20 player-slider">
       </div>
@@ -123,6 +121,7 @@
   <audio id="local-audio-player"></audio>
   <audio id="notification-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"
     preload="auto"></audio>
+  <script src="script.js"></script>
 </body>
 
 </html>

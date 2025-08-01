@@ -1,12 +1,6 @@
 'use strict';
 
-function applyTheme(theme) {
-    const darkIcon = document.getElementById('theme-toggle-dark-icon');
-    const lightIcon = document.getElementById('theme-toggle-light-icon');
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    darkIcon.classList.toggle('hidden', theme !== 'dark');
-    lightIcon.classList.toggle('hidden', theme === 'dark');
-}
+// Lógica de tema removida
 
 // Elementos do DOM
 const timerDisplay = document.getElementById('timer-display');
@@ -16,8 +10,6 @@ const resetTimerBtn = document.getElementById('reset-timer-btn');
 const cyclesCountDisplay = document.getElementById('cycles-count-display');
 const currentModeDisplay = document.getElementById('current-mode-display');
 const modeButtons = document.querySelectorAll('.pomodoro-mode-btn');
-const presetSelect = document.getElementById('pomodoro-preset-select');
-const themeToggleBtn = document.getElementById('theme-toggle');
 const notificationSound = document.getElementById('notification-sound');
 const taskForm = document.getElementById('task-form');
 const taskInput = document.getElementById('task-input');
@@ -34,16 +26,23 @@ const playerProgressSlider = document.getElementById('player-progress-slider');
 const playerCurrentTime = document.getElementById('player-current-time');
 const playerTotalTime = document.getElementById('player-total-time');
 const currentYearSpan = document.getElementById('current-year');
-
+const presetDisplay = document.getElementById('preset-display');
+const prevPresetBtn = document.getElementById('prev-preset-btn');
+const nextPresetBtn = document.getElementById('next-preset-btn');
 
 let timerInterval;
 let timeLeft;
+
 const pomodoroPresets = {
-    'test': { focusDuration: 60, shortBreakDuration: 10, longBreakDuration: 20, cyclesBeforeLongBreak: 2 },
-    'default': { focusDuration: 25 * 60, shortBreakDuration: 5 * 60, longBreakDuration: 15 * 60, cyclesBeforeLongBreak: 4 },
-    'intense': { focusDuration: 30 * 60, shortBreakDuration: 5 * 60, longBreakDuration: 15 * 60, cyclesBeforeLongBreak: 4 },
-    'long': { focusDuration: 50 * 60, shortBreakDuration: 10 * 60, longBreakDuration: 20 * 60, cyclesBeforeLongBreak: 2 }
+    'test': { name: 'Teste (1min)', settings: { focusDuration: 60, shortBreakDuration: 10, longBreakDuration: 20, cyclesBeforeLongBreak: 2 } },
+    'default': { name: 'Padrão (4x25)', settings: { focusDuration: 25 * 60, shortBreakDuration: 5 * 60, longBreakDuration: 15 * 60, cyclesBeforeLongBreak: 4 } },
+    'intense': { name: 'Intenso (4x30)', settings: { focusDuration: 30 * 60, shortBreakDuration: 5 * 60, longBreakDuration: 15 * 60, cyclesBeforeLongBreak: 4 } },
+    'long': { name: 'Longo (2x50)', settings: { focusDuration: 50 * 60, shortBreakDuration: 10 * 60, longBreakDuration: 20 * 60, cyclesBeforeLongBreak: 2 } }
 };
+
+const presetKeys = Object.keys(pomodoroPresets);
+let currentPresetIndex = 0;
+
 let focusDuration, shortBreakDuration, longBreakDuration, cyclesBeforeLongBreak;
 let currentCycleCount = 0;
 let isPaused = true;
@@ -53,6 +52,44 @@ let currentMusicTrackIndex = 0;
 let isMusicPlaying = false;
 let notificationPermission = "default";
 let tasks = JSON.parse(localStorage.getItem('pomodoroTasks')) || [];
+
+function updatePresetDisplay(isInitial = false, direction = 0) {
+    const currentPresetKey = presetKeys[currentPresetIndex];
+    const presetName = pomodoroPresets[currentPresetKey].name;
+
+    if (isInitial) {
+        presetDisplay.textContent = presetName;
+        applyPreset(currentPresetKey);
+        return;
+    }
+
+    const outClass = direction === 1 ? 'slide-out-to-left' : 'slide-out-to-right';
+    const inClass = direction === 1 ? 'slide-in-from-right' : 'slide-in-from-left';
+
+    presetDisplay.classList.add(outClass);
+
+    presetDisplay.addEventListener('animationend', () => {
+        presetDisplay.classList.remove(outClass);
+        presetDisplay.textContent = presetName;
+        presetDisplay.classList.add(inClass);
+        applyPreset(currentPresetKey);
+
+        presetDisplay.addEventListener('animationend', () => {
+            presetDisplay.classList.remove(inClass);
+        }, { once: true });
+
+    }, { once: true });
+}
+
+function navigatePresets(direction) {
+    currentPresetIndex += direction;
+    if (currentPresetIndex < 0) {
+        currentPresetIndex = presetKeys.length - 1;
+    } else if (currentPresetIndex >= presetKeys.length) {
+        currentPresetIndex = 0;
+    }
+    updatePresetDisplay(false, direction);
+}
 
 async function fetchPlaylistAndInitializePlayer() {
     try {
@@ -66,25 +103,22 @@ async function fetchPlaylistAndInitializePlayer() {
     }
 }
 
-function applyPreset() {
-    const selectedPreset = presetSelect.value;
-    const settings = pomodoroPresets[selectedPreset];
-    if (!settings) {
-        console.error(`Preset "${selectedPreset}" não encontrado! Usando 'default'.`);
-        settings = pomodoroPresets['default'];
-    }
+function applyPreset(presetKey) {
+    if (!presetKey || !pomodoroPresets[presetKey]) return;
+    const settings = pomodoroPresets[presetKey].settings;
     focusDuration = settings.focusDuration;
     shortBreakDuration = settings.shortBreakDuration;
     longBreakDuration = settings.longBreakDuration;
     cyclesBeforeLongBreak = settings.cyclesBeforeLongBreak;
-    localStorage.setItem('pomodoroPreset', selectedPreset);
+    localStorage.setItem('pomodoroPreset', presetKey);
     setMode('focus', true);
 }
 
 function loadPomodoroSettings() {
-    const savedPreset = localStorage.getItem('pomodoroPreset') || 'default';
-    presetSelect.value = savedPreset;
-    applyPreset();
+    const savedPresetKey = localStorage.getItem('pomodoroPreset') || 'default';
+    const savedIndex = presetKeys.indexOf(savedPresetKey);
+    currentPresetIndex = (savedIndex !== -1) ? savedIndex : 0;
+    updatePresetDisplay(true);
 }
 
 function updateTimerDisplay() {
@@ -92,13 +126,15 @@ function updateTimerDisplay() {
     const seconds = timeLeft % 60;
     timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     document.title = `${timerDisplay.textContent} - DevFlow Pomodoro`;
+
+    timerDisplay.classList.remove('timer-tick');
+    void timerDisplay.offsetWidth;
+    timerDisplay.classList.add('timer-tick');
 }
 
 function updateModeDisplay() {
     modeButtons.forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.querySelector(`[data-mode="${currentMode}"]`);
-    if (activeBtn) activeBtn.classList.add('active');
-
+    document.querySelector(`[data-mode="${currentMode}"]`)?.classList.add('active');
     const modeTexts = { focus: 'Modo Foco', shortBreak: 'Pausa Curta', longBreak: 'Descanso Longo' };
     currentModeDisplay.textContent = modeTexts[currentMode];
 }
@@ -188,9 +224,7 @@ function requestNotificationPermission() {
 }
 
 function showNotification(title, body) {
-    if (Notification.permission === "granted") {
-        new Notification(title, { body });
-    }
+    if (Notification.permission === "granted") new Notification(title, { body });
 }
 
 function saveTasks() {
@@ -232,30 +266,22 @@ function handleTaskListClick(e) {
     const action = target.dataset.action;
     const index = parseInt(target.dataset.index, 10);
     if (isNaN(index)) return;
-
-    if (action === 'toggle') {
-        tasks[index].done = !tasks[index].done;
-    } else if (action === 'delete') {
-        tasks.splice(index, 1);
-    }
-
+    if (action === 'toggle') tasks[index].done = !tasks[index].done;
+    else if (action === 'delete') tasks.splice(index, 1);
     saveTasks();
     renderTasks();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    applyTheme(localStorage.getItem('theme') || 'dark');
-    themeToggleBtn.addEventListener('click', () => {
-        const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-        applyTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-    });
+    // Lógica de tema removida
 
     startTimerBtn.addEventListener('click', startTimer);
     pauseTimerBtn.addEventListener('click', pauseTimer);
     resetTimerBtn.addEventListener('click', () => setMode('focus', true));
-    presetSelect.addEventListener('change', applyPreset);
     modeButtons.forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode)));
+
+    prevPresetBtn.addEventListener('click', () => navigatePresets(-1));
+    nextPresetBtn.addEventListener('click', () => navigatePresets(1));
 
     playerPlayPauseBtn.addEventListener('click', toggleMusicPlayer);
     playerPrevBtn.addEventListener('click', () => { loadMusicTrack(currentMusicTrackIndex - 1); if (isMusicPlaying) localAudioPlayer.play(); });
@@ -267,9 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localAudioPlayer.addEventListener('loadedmetadata', () => playerTotalTime.textContent = formatTime(localAudioPlayer.duration));
     localAudioPlayer.addEventListener('timeupdate', () => {
         playerCurrentTime.textContent = formatTime(localAudioPlayer.currentTime);
-        if(document.activeElement !== playerProgressSlider) {
-            playerProgressSlider.value = localAudioPlayer.currentTime;
-        }
+        if(document.activeElement !== playerProgressSlider) playerProgressSlider.value = localAudioPlayer.currentTime;
         playerProgressSlider.max = localAudioPlayer.duration || 0;
     });
 
@@ -281,7 +305,9 @@ document.addEventListener('DOMContentLoaded', () => {
     taskList.addEventListener('click', handleTaskListClick);
 
     currentYearSpan.textContent = new Date().getFullYear();
+
     loadPomodoroSettings();
+
     fetchPlaylistAndInitializePlayer();
     requestNotificationPermission();
     renderTasks();
