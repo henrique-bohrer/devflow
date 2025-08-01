@@ -13,7 +13,7 @@
 
 <body class="bg-slate-900 overflow-x-hidden">
 
-  <main class="flex-grow p-4 md:p-6 pb-32 flex items-center justify-center min-h-screen">
+  <main class="flex-grow p-4 md:p-6 pb-32 flex items-center min-h-screen">
     <div class="w-full max-w-md mx-auto flex flex-col items-center">
       <header class="text-center mb-8 w-full">
         <h1 class="text-4xl md:text-5xl font-bold title-gradient">DevFlow Pomodoro</h1>
@@ -64,13 +64,11 @@
     </div>
   </main>
 
-  <!-- ✅ BOTÃO PARA ABRIR/FECHAR A LISTA DE TAREFAS -->
   <button id="toggle-tasks-btn"
     class="fixed bottom-24 right-4 h-16 w-16 bg-indigo-600 rounded-full shadow-lg flex items-center justify-center text-white transform hover:scale-110 transition-transform duration-200 z-50">
     <i class="fa-solid fa-list-check fa-2x"></i>
   </button>
 
-  <!-- ✅ PAINEL LATERAL PARA A LISTA DE TAREFAS -->
   <aside id="task-panel" class="task-panel">
     <div class="p-6 flex flex-col h-full">
       <h3 class="text-2xl font-bold mb-6 text-slate-100">Tarefas da Sessão</h3>
@@ -83,7 +81,6 @@
       <ul id="task-list" class="flex-grow space-y-2 overflow-y-auto custom-scrollbar pr-2"></ul>
     </div>
   </aside>
-
 
   <footer id="footer-music-player"
     class="fixed bottom-0 left-0 w-full bg-slate-900/70 backdrop-blur-xl border-t border-slate-800 z-40">
@@ -113,8 +110,11 @@
   </footer>
 
   <audio id="local-audio-player" preload="none"></audio>
-  <audio id="notification-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"
-    preload="auto"></audio>
+  <audio id="notification-sound" src="short-alarm-clock.mp3" preload="auto"></audio>
+  <!-- ✅ NOVO SOM DE ALARME PARA PAUSA -->
+  <audio id="break-notification-sound" src="tic-tac.mp3" preload="auto"></audio>
+  <audio id="warning-sound" src="tic-tac.mp3" preload="auto"></audio>
+
   <script src="script.js"></script>
 </body>
 

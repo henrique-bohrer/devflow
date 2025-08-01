@@ -9,6 +9,8 @@ const cyclesCountDisplay = document.getElementById('cycles-count-display');
 const currentModeDisplay = document.getElementById('current-mode-display');
 const modeButtons = document.querySelectorAll('.pomodoro-mode-btn');
 const notificationSound = document.getElementById('notification-sound');
+const breakNotificationSound = document.getElementById('break-notification-sound');
+const warningSound = document.getElementById('warning-sound');
 const localAudioPlayer = document.getElementById('local-audio-player');
 const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
 const playerPlayIcon = document.getElementById('player-play-icon');
@@ -20,8 +22,6 @@ const presetDisplay = document.getElementById('preset-display');
 const prevPresetBtn = document.getElementById('prev-preset-btn');
 const nextPresetBtn = document.getElementById('next-preset-btn');
 const volumeTooltip = document.getElementById('volume-tooltip');
-
-// Elementos da Lista de Tarefas (agora no painel)
 const taskPanel = document.getElementById('task-panel');
 const toggleTasksBtn = document.getElementById('toggle-tasks-btn');
 const taskForm = document.getElementById('task-form');
@@ -32,7 +32,6 @@ let timerInterval;
 let timeLeft;
 
 const pomodoroPresets = {
-    'test': { name: 'Teste (1min)', settings: { focusDuration: 60, shortBreakDuration: 10, longBreakDuration: 20, cyclesBeforeLongBreak: 2 } },
     'default': { name: 'Padrão (4x25)', settings: { focusDuration: 25 * 60, shortBreakDuration: 5 * 60, longBreakDuration: 15 * 60, cyclesBeforeLongBreak: 4 } },
     'intense': { name: 'Intenso (4x30)', settings: { focusDuration: 30 * 60, shortBreakDuration: 5 * 60, longBreakDuration: 15 * 60, cyclesBeforeLongBreak: 4 } },
     'long': { name: 'Longo (2x50)', settings: { focusDuration: 50 * 60, shortBreakDuration: 10 * 60, longBreakDuration: 20 * 60, cyclesBeforeLongBreak: 2 } }
@@ -47,6 +46,7 @@ let isPaused = true;
 let currentMode = 'focus';
 let notificationPermission = "default";
 let tasks = JSON.parse(localStorage.getItem('pomodoroTasks')) || [];
+let areSoundsUnlocked = false;
 
 function updatePresetDisplay(isInitial = false, direction = 0) {
     const currentPresetKey = presetKeys[currentPresetIndex];
@@ -77,6 +77,7 @@ function updatePresetDisplay(isInitial = false, direction = 0) {
 }
 
 function navigatePresets(direction) {
+    if (!isPaused) return;
     currentPresetIndex += direction;
     if (currentPresetIndex < 0) currentPresetIndex = presetKeys.length - 1;
     else if (currentPresetIndex >= presetKeys.length) currentPresetIndex = 0;
@@ -122,9 +123,11 @@ function updateTimerDisplay() {
     timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     document.title = `${timerDisplay.textContent} - DevFlow Pomodoro`;
 
-    timerDisplay.classList.remove('timer-tick');
-    void timerDisplay.offsetWidth;
-    timerDisplay.classList.add('timer-tick');
+    if (!isPaused) {
+        timerDisplay.classList.remove('timer-tick');
+        void timerDisplay.offsetWidth;
+        timerDisplay.classList.add('timer-tick');
+    }
 }
 
 function updateModeDisplay() {
@@ -134,39 +137,85 @@ function updateModeDisplay() {
     currentModeDisplay.textContent = modeTexts[currentMode];
 }
 
+function setVolumeByMode(mode) {
+    const targetVolume = (mode === 'focus') ? 0.2 : 0.05;
+    localAudioPlayer.volume = targetVolume;
+    playerVolumeSlider.value = targetVolume * 100;
+    updateVolumeSlider();
+}
+
 function setMode(mode, manualReset = false) {
     currentMode = mode;
     isPaused = true;
     clearInterval(timerInterval);
     timeLeft = { focus: focusDuration, shortBreak: shortBreakDuration, longBreak: longBreakDuration }[mode];
+
+    timerDisplay.classList.remove('timer-warning');
+
     updateTimerDisplay();
     updateModeDisplay();
     startTimerBtn.classList.remove('hidden');
     pauseTimerBtn.classList.add('hidden');
+
     if (manualReset) {
         currentCycleCount = 0;
         cyclesCountDisplay.textContent = currentCycleCount;
+        modeButtons.forEach(btn => {
+            btn.disabled = (btn.dataset.mode !== 'focus');
+        });
     }
+
+    setVolumeByMode(mode);
+}
+
+function playSound(soundElement) {
+    soundElement.currentTime = 0;
+    soundElement.play().catch(e => console.error("Erro ao tocar som:", e));
 }
 
 function startTimer() {
     if (!isPaused) return;
+
+    if (!areSoundsUnlocked) {
+        notificationSound.play().then(() => notificationSound.pause());
+        breakNotificationSound.play().then(() => breakNotificationSound.pause());
+        warningSound.play().then(() => warningSound.pause());
+        areSoundsUnlocked = true;
+    }
+
+    if (localAudioPlayer.paused) {
+        toggleMusicPlayer();
+    }
+
     isPaused = false;
     startTimerBtn.classList.add('hidden');
     pauseTimerBtn.classList.remove('hidden');
+
+    modeButtons.forEach(btn => btn.disabled = true);
+    prevPresetBtn.disabled = true;
+    nextPresetBtn.disabled = true;
+
+
     timerInterval = setInterval(() => {
         timeLeft--;
         updateTimerDisplay();
+
+        if (timeLeft === 10) {
+            playSound(warningSound);
+            timerDisplay.classList.add('timer-warning');
+        }
+
         if (timeLeft < 0) {
             clearInterval(timerInterval);
             if (currentMode === 'focus') {
                 currentCycleCount++;
                 cyclesCountDisplay.textContent = currentCycleCount;
+                playSound(notificationSound);
                 setMode(currentCycleCount % cyclesBeforeLongBreak === 0 ? 'longBreak' : 'shortBreak');
             } else {
+                playSound(breakNotificationSound);
                 setMode('focus');
             }
-            notificationSound.play();
             showNotification("Ciclo Concluído!", "Hora de mudar de atividade.");
             startTimer();
         }
@@ -177,7 +226,10 @@ function pauseTimer() {
     isPaused = true;
     clearInterval(timerInterval);
     startTimerBtn.classList.remove('hidden');
-    pauseTimerBtn.classList.add('hidden');
+    pauseTimerBtn.classList.remove('hidden');
+    modeButtons.forEach(btn => btn.disabled = true);
+    prevPresetBtn.disabled = true;
+    nextPresetBtn.disabled = true;
 }
 
 function requestNotificationPermission() {
@@ -249,8 +301,20 @@ function updateVolumeSlider() {
 document.addEventListener('DOMContentLoaded', () => {
     startTimerBtn.addEventListener('click', startTimer);
     pauseTimerBtn.addEventListener('click', pauseTimer);
-    resetTimerBtn.addEventListener('click', () => setMode('focus', true));
-    modeButtons.forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode)));
+
+    resetTimerBtn.addEventListener('click', () => {
+        setMode('focus', true);
+        prevPresetBtn.disabled = false;
+        nextPresetBtn.disabled = false;
+    });
+
+    modeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (isPaused && btn.dataset.mode === 'focus') {
+                setMode('focus');
+            }
+        });
+    });
 
     prevPresetBtn.addEventListener('click', () => navigatePresets(-1));
     nextPresetBtn.addEventListener('click', () => navigatePresets(1));
@@ -274,7 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
     taskForm.addEventListener('submit', addTask);
     taskList.addEventListener('click', handleTaskListClick);
 
-    // ✅ Lógica para o painel de tarefas
     toggleTasksBtn.addEventListener('click', () => {
         taskPanel.classList.toggle('is-open');
     });
