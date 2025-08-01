@@ -72,20 +72,12 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
 
 /* ===== VOLUME TOOLTIP ===== */
 .volume-tooltip {
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--bg-card);
-  color: var(--text-primary);
-  padding: 4px 8px;
-  border-radius: 5px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
+  position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background-color: var(--bg-card); color: var(--text-primary); padding: 4px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
 }
-#volume-control-container:hover .volume-tooltip {
-  opacity: 1;
+#volume-control-container:hover .volume-tooltip { opacity: 1; }
+
+/* ===== DUCK CHAT STYLES ===== */
+#duck-chat-modal.visible #duck-chat-container {
+    transform: scale(1);
+    opacity: 1;
 }
