@@ -7,7 +7,7 @@
   --border-color: #334155;
   --accent-primary: #818cf8;
   --accent-secondary: #34d399;
-  --warning-color: #f87171; /* Vermelho para avisos */
+  --warning-color: #f87171;
 }
 
 /* ===== BASE & TYPOGRAPHY ===== */
@@ -38,7 +38,6 @@ body {
 @keyframes tick { from { transform: scale(1); } to { transform: scale(1.01); } }
 .timer-tick { animation: tick 0.5s ease-out alternate; }
 
-/* ✅ ANIMAÇÃO DE AVISO PARA O TIMER */
 @keyframes pulseWarning {
   0%, 100% { transform: scale(1); color: var(--text-primary); }
   50% { transform: scale(1.03); color: var(--warning-color); }
@@ -47,7 +46,6 @@ body {
   animation: pulseWarning 1s infinite;
 }
 
-
 /* ===== CUSTOM SCROLLBAR ===== */
 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -55,22 +53,9 @@ body {
 
 /* ===== TASK PANEL ===== */
 .task-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 380px;
-  max-width: 90vw;
-  height: 100%;
-  background-color: #162135;
-  border-left: 1px solid var(--border-color);
-  box-shadow: -10px 0px 30px rgba(0,0,0,0.2);
-  transform: translateX(100%);
-  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  z-index: 45;
+  position: fixed; top: 0; right: 0; width: 380px; max-width: 90vw; height: 100%; background-color: #162135; border-left: 1px solid var(--border-color); box-shadow: -10px 0px 30px rgba(0,0,0,0.2); transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 45;
 }
-.task-panel.is-open {
-  transform: translateX(0);
-}
+.task-panel.is-open { transform: translateX(0); }
 
 /* ===== PRESET PICKER ===== */
 .preset-display {
