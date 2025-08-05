@@ -44,6 +44,8 @@ const registerForm = document.getElementById('register-form');
 const showRegisterBtn = document.getElementById('show-register-btn');
 const showLoginBtn = document.getElementById('show-login-btn');
 const loader = document.getElementById('loader');
+const loaderParagraph = document.getElementById('loader-paragraph');
+const closeTasksBtn = document.getElementById('close-tasks-btn');
 
 // Variáveis de Estado
 let timerInterval;
@@ -69,7 +71,11 @@ async function checkUser() {
     const { data: { session } } = await _supabase.auth.getSession();
     user = session?.user;
     updateUIForUser();
-    fetchTasks();
+    if (user) {
+        await fetchTasks();
+    } else {
+        loadTasksFromLocalStorage();
+    }
 }
 function updateUIForUser() {
     if (user) {
@@ -97,7 +103,7 @@ async function handleLogin(e) {
     } else {
         user = data.user;
         updateUIForUser();
-        fetchTasks();
+        await fetchTasks();
         authModal.classList.add('hidden');
     }
 }
@@ -119,15 +125,10 @@ async function handleRegister(e) {
     }
 }
 async function handleLogout() {
-    const { error } = await _supabase.auth.signOut();
-    if (error) {
-        alert(error.message);
-    } else {
-        user = null;
-        tasks = [];
-        updateUIForUser();
-        renderTasks();
-    }
+    await _supabase.auth.signOut();
+    user = null;
+    updateUIForUser();
+    loadTasksFromLocalStorage();
 }
 function showLoginView() {
     loginView.classList.remove('hidden');
@@ -137,46 +138,63 @@ function showRegisterView() {
     loginView.classList.add('hidden');
     registerView.classList.remove('hidden');
 }
+function loadTasksFromLocalStorage() {
+    const localTasks = localStorage.getItem('pomodoroTasks');
+    tasks = localTasks ? JSON.parse(localTasks) : [];
+    renderTasks();
+}
 async function fetchTasks() {
-    if (!user) {
-        taskList.innerHTML = `<li class="text-center text-slate-400 p-2">Faça login para ver suas tarefas.</li>`;
-        return;
-    }
-    const { data, error } = await _supabase.from('tasks').select('*').order('created_at', { ascending: true });
-    if (error) {
-        console.error('Erro ao buscar tarefas:', error);
-    } else {
+    if (!user) return;
+    try {
+        const { data, error } = await _supabase.from('tasks').select('*').order('created_at');
+        if (error) throw error;
         tasks = data;
         renderTasks();
+    } catch (error) {
+        console.error("Erro ao buscar tarefas:", error);
     }
 }
 async function addTask(e) {
     e.preventDefault();
     const text = taskInput.value.trim();
-    if (!text || !user) return;
-    const { data, error } = await _supabase.from('tasks').insert({ text: text, user_id: user.id }).select();
-    if (error) {
-        console.error('Erro ao adicionar tarefa:', error);
+    if (!text) return;
+
+    if (user) {
+        const { data, error } = await _supabase.from('tasks').insert({ text: text, user_id: user.id }).select();
+        if (error) {
+            console.error('Erro ao adicionar tarefa:', error);
+        } else {
+            tasks.push(data[0]);
+        }
     } else {
-        tasks.push(data[0]);
-        renderTasks();
+        const newTask = { id: Date.now(), text, done: false, created_at: new Date().toISOString() };
+        tasks.push(newTask);
+        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
     }
     taskInput.value = '';
+    renderTasks();
 }
 async function updateTaskStatus(id, done) {
-    const { error } = await _supabase.from('tasks').update({ done: done }).eq('id', id);
-    if (error) console.error('Erro ao atualizar tarefa:', error);
+    if (user) {
+        await _supabase.from('tasks').update({ done }).eq('id', id);
+    } else {
+        const taskIndex = tasks.findIndex(t => t.id === id);
+        if (taskIndex > -1) {
+            tasks[taskIndex].done = done;
+            localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
+        }
+    }
 }
 async function deleteTask(id) {
-    const { error } = await _supabase.from('tasks').delete().eq('id', id);
-    if (error) console.error('Erro ao deletar tarefa:', error);
+    if (user) {
+        await _supabase.from('tasks').delete().eq('id', id);
+    } else {
+        tasks = tasks.filter(t => t.id !== id);
+        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
+    }
 }
 function renderTasks() {
     taskList.innerHTML = '';
-    if (!user) {
-        taskList.innerHTML = `<li class="text-center text-slate-400 p-2">Faça login para ver suas tarefas.</li>`;
-        return;
-    }
     if (tasks.length === 0) {
         taskList.innerHTML = `<li class="text-center text-slate-400 p-2">Nenhuma tarefa adicionada.</li>`;
         return;
@@ -196,9 +214,11 @@ async function handleTaskListClick(e) {
     const target = e.target;
     const action = target.dataset.action;
     const id = parseInt(target.dataset.id, 10);
-    if (!action || isNaN(id) || !user) return;
+    if (!action || isNaN(id)) return;
+
     const taskIndex = tasks.findIndex(t => t.id === id);
     if (taskIndex === -1) return;
+
     if (action === 'toggle') {
         tasks[taskIndex].done = !tasks[taskIndex].done;
         await updateTaskStatus(id, tasks[taskIndex].done);
@@ -419,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
     taskForm.addEventListener('submit', addTask);
     taskList.addEventListener('click', handleTaskListClick);
     toggleTasksBtn.addEventListener('click', () => taskPanel.classList.toggle('is-open'));
+    closeTasksBtn.addEventListener('click', () => taskPanel.classList.remove('is-open'));
 
     // Inicialização Geral
     document.getElementById('current-year').textContent = new Date().getFullYear();
@@ -429,14 +450,29 @@ document.addEventListener('DOMContentLoaded', () => {
     checkUser();
 });
 
-// ✅ LÓGICA DA TELA DE CARREGAMENTO MELHORADA
+// ✅ LÓGICA DA TELA DE CARREGAMENTO COM TEXTO DIGITADO
 window.addEventListener('load', () => {
     if (loader) {
-        // Garante que a tela de carregamento seja exibida por pelo menos 10 segundos
-        const minLoadingTime = new Promise(resolve => setTimeout(resolve, 5000));
+        const text = "Organize suas tarefas. Aumente sua produtividade.";
+        let i = 0;
 
-        Promise.all([minLoadingTime, document.fonts.ready]).then(() => {
-             loader.classList.add('hidden');
-        });
+        // Atraso inicial para as animações de entrada terminarem
+        setTimeout(() => {
+            loaderParagraph.classList.add('typing');
+
+            function typeWriter() {
+                if (i < text.length) {
+                    loaderParagraph.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 60); // Velocidade da digitação
+                } else {
+                    // Fim da animação
+                    setTimeout(() => {
+                        loader.classList.add('hidden');
+                    }, 1500); // Tempo de espera após a digitação
+                }
+            }
+            typeWriter();
+        }, 2000); // Inicia a digitação após 2 segundos
     }
 });

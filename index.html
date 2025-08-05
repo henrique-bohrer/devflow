@@ -15,7 +15,7 @@
 
 <body class="bg-slate-900 overflow-x-hidden">
 
-  <!-- ✅ TELA DE INTRODUÇÃO ANIMADA -->
+  <!-- ✅ NOVA TELA DE INTRODUÇÃO ANIMADA -->
   <div id="loader" class="loader">
     <div class="loader-content">
       <img src="icone.png" alt="Logo DevFlow Pomodoro" class="loader-logo">
@@ -87,7 +87,13 @@
 
   <aside id="task-panel" class="task-panel">
     <div class="p-6 flex flex-col h-full">
-      <h3 class="text-2xl font-bold mb-6 text-slate-100">Tarefas da Sessão</h3>
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-bold text-slate-100">Tarefas da Sessão</h3>
+        <button id="close-tasks-btn"
+          class="h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors">
+          <i class="fa-solid fa-times" style="background-color: #0d291e; padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: center; border-radius: 50%;"></i>
+        </button>
+      </div>
       <div id="tasks-content">
         <form id="task-form" class="flex gap-3 mb-4">
           <input type="text" id="task-input" placeholder="Adicionar nova tarefa..."
