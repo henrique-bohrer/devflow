@@ -13,11 +13,6 @@
 
 <body class="bg-slate-900 overflow-x-hidden">
 
-  <!-- ✅ NOVO BOTÃO DE LOGIN/USUÁRIO -->
-  <div id="user-session-display" class="fixed top-4 right-4 z-50">
-    <!-- O conteúdo aqui será preenchido pelo JavaScript -->
-  </div>
-
   <main class="flex-grow p-4 md:p-6 pb-32 flex items-center min-h-screen">
     <div class="w-full max-w-md mx-auto flex flex-col items-center">
       <header class="text-center mb-8 w-full">
@@ -76,7 +71,6 @@
 
   <aside id="task-panel" class="task-panel">
     <div class="p-6 flex flex-col h-full">
-      <div id="user-display" class="mb-4"></div>
       <h3 class="text-2xl font-bold mb-6 text-slate-100">Tarefas da Sessão</h3>
       <div id="tasks-content">
         <form id="task-form" class="flex gap-3 mb-4">
@@ -86,11 +80,6 @@
             class="py-3 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200">Add</button>
         </form>
         <ul id="task-list" class="flex-grow space-y-2 overflow-y-auto custom-scrollbar pr-2"></ul>
-      </div>
-      <div id="login-prompt" class="text-center hidden">
-        <p class="text-slate-400 mb-4">Faça login para salvar e sincronizar suas tarefas.</p>
-        <button id="login-btn-panel" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg">Fazer
-          Login</button>
       </div>
     </div>
   </aside>
@@ -121,44 +110,6 @@
       </div>
     </div>
   </footer>
-
-  <!-- MODAL DE LOGIN/REGISTRO -->
-  <div id="auth-modal"
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] hidden">
-    <div class="w-full max-w-sm bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 relative">
-      <button id="close-auth-modal-btn"
-        class="absolute top-4 right-4 h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors"><i
-          class="fa-solid fa-times"></i></button>
-      <div id="login-view">
-        <h3 class="text-2xl font-bold text-slate-100 mb-6">Login</h3>
-        <form id="login-form">
-          <input type="text" id="login-username" placeholder="Usuário"
-            class="w-full p-3 mb-4 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          <input type="password" id="login-password" placeholder="Senha"
-            class="w-full p-3 mb-6 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg">Entrar</button>
-        </form>
-        <p class="text-center text-sm text-slate-400 mt-4">Não tem uma conta? <button id="show-register-btn"
-            class="font-semibold text-indigo-400 hover:underline">Registre-se</button></p>
-      </div>
-      <div id="register-view" class="hidden">
-        <h3 class="text-2xl font-bold text-slate-100 mb-6">Registro</h3>
-        <form id="register-form">
-          <input type="text" id="register-username" placeholder="Usuário"
-            class="w-full p-3 mb-4 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          <input type="password" id="register-password" placeholder="Senha"
-            class="w-full p-3 mb-4 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          <!-- ✅ NOVO CAMPO DE CONFIRMAÇÃO DE SENHA -->
-          <input type="password" id="register-password-confirm" placeholder="Confirmar Senha"
-            class="w-full p-3 mb-6 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg">Criar
-            Conta</button>
-        </form>
-        <p class="text-center text-sm text-slate-400 mt-4">Já tem uma conta? <button id="show-login-btn"
-            class="font-semibold text-indigo-400 hover:underline">Faça login</button></p>
-      </div>
-    </div>
-  </div>
 
   <audio id="local-audio-player" preload="none"></audio>
   <audio id="notification-sound" src="short-alarm-clock.mp3" preload="auto"></audio>

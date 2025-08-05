@@ -32,21 +32,6 @@ const toggleTasksBtn = document.getElementById('toggle-tasks-btn');
 const taskForm = document.getElementById('task-form');
 const taskInput = document.getElementById('task-input');
 const taskList = document.getElementById('task-list');
-const tasksContent = document.getElementById('tasks-content');
-const loginPrompt = document.getElementById('login-prompt');
-
-// Elementos do DOM (Autenticação)
-const userSessionDisplay = document.getElementById('user-session-display');
-const authModal = document.getElementById('auth-modal');
-const closeAuthModalBtn = document.getElementById('close-auth-modal-btn');
-const loginView = document.getElementById('login-view');
-const registerView = document.getElementById('register-view');
-const loginForm = document.getElementById('login-form');
-const registerForm = document.getElementById('register-form');
-const showRegisterBtn = document.getElementById('show-register-btn');
-const showLoginBtn = document.getElementById('show-login-btn');
-const loginBtnPanel = document.getElementById('login-btn-panel');
-
 
 // Variáveis de Estado
 let timerInterval;
@@ -56,8 +41,7 @@ let isPaused = true;
 let currentMode = 'focus';
 let tasks = [];
 let areSoundsUnlocked = false;
-let isLoggedIn = false;
-let notificationPermission = "default"; // ✅ CORREÇÃO: Variável declarada
+let notificationPermission = "default";
 
 const pomodoroPresets = {
     'default': { name: 'Padrão (4x25)', settings: { focusDuration: 25 * 60, shortBreakDuration: 5 * 60, longBreakDuration: 15 * 60, cyclesBeforeLongBreak: 4 } },
@@ -68,120 +52,7 @@ const presetKeys = Object.keys(pomodoroPresets);
 let currentPresetIndex = 0;
 let focusDuration, shortBreakDuration, longBreakDuration, cyclesBeforeLongBreak;
 
-// --- LÓGICA DE AUTENTICAÇÃO E TAREFAS ---
-
-async function checkSession() {
-    try {
-        const response = await fetch('api/auth.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'check_session' })
-        });
-        const data = await response.json();
-        if (data.loggedIn) {
-            isLoggedIn = true;
-            updateUIForLoggedInUser(data.username);
-            await fetchTasks();
-        } else {
-            isLoggedIn = false;
-            updateUIForGuest();
-            loadTasksFromLocalStorage();
-        }
-    } catch (error) {
-        console.error("Erro ao verificar sessão, usando modo local:", error);
-        isLoggedIn = false;
-        updateUIForGuest();
-        loadTasksFromLocalStorage();
-    }
-}
-
-function updateUIForLoggedInUser(username) {
-    tasksContent.classList.remove('hidden');
-    loginPrompt.classList.add('hidden');
-    userSessionDisplay.innerHTML = `
-        <div class="flex items-center gap-4">
-            <span class="text-slate-300 font-semibold">Olá, ${username}</span>
-            <button id="logout-btn" class="text-sm text-indigo-400 hover:underline">Sair</button>
-        </div>`;
-    document.getElementById('logout-btn').addEventListener('click', handleLogout);
-}
-
-function updateUIForGuest() {
-    tasksContent.classList.remove('hidden');
-    loginPrompt.classList.add('hidden');
-    userSessionDisplay.innerHTML = `
-        <button id="login-btn-main" class="py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
-            Fazer Login / Cadastrar
-        </button>`;
-    document.getElementById('login-btn-main').addEventListener('click', () => authModal.classList.remove('hidden'));
-}
-
-async function handleLogin(e) {
-    e.preventDefault();
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-    const response = await fetch('api/auth.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', username, password })
-    });
-    const data = await response.json();
-    if (data.success) {
-        isLoggedIn = true;
-        updateUIForLoggedInUser(data.username);
-        await fetchTasks();
-        authModal.classList.add('hidden');
-    } else {
-        alert(data.message);
-    }
-}
-
-async function handleRegister(e) {
-    e.preventDefault();
-    const username = document.getElementById('register-username').value;
-    const password = document.getElementById('register-password').value;
-    const passwordConfirm = document.getElementById('register-password-confirm').value;
-
-    if (password !== passwordConfirm) {
-        alert('As senhas não correspondem. Tente novamente.');
-        return;
-    }
-
-    const response = await fetch('api/auth.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'register', username, password })
-    });
-    const data = await response.json();
-    if (data.success) {
-        alert(data.message);
-        showLoginView();
-    } else {
-        alert(data.message);
-    }
-}
-
-async function handleLogout() {
-    await fetch('api/auth.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'logout' })
-    });
-    isLoggedIn = false;
-    updateUIForGuest();
-    loadTasksFromLocalStorage();
-}
-
-function showLoginView() {
-    loginView.classList.remove('hidden');
-    registerView.classList.add('hidden');
-}
-function showRegisterView() {
-    loginView.classList.add('hidden');
-    registerView.classList.remove('hidden');
-}
-
-// --- LÓGICA DE TAREFAS (COM API E LOCALSTORAGE) ---
+// --- LÓGICA DE TAREFAS (APENAS LOCALSTORAGE) ---
 
 function loadTasksFromLocalStorage() {
     const localTasks = localStorage.getItem('pomodoroTasks');
@@ -189,64 +60,30 @@ function loadTasksFromLocalStorage() {
     renderTasks();
 }
 
-async function fetchTasks() {
-    if (!isLoggedIn) return;
-    try {
-        const response = await fetch('api/tasks.php');
-        tasks = await response.json();
-        renderTasks();
-    } catch (error) {
-        console.error("Erro ao buscar tarefas:", error);
-    }
-}
-
-async function addTask(e) {
+function addTask(e) {
     e.preventDefault();
     const text = taskInput.value.trim();
     if (!text) return;
 
-    if (isLoggedIn) {
-        const response = await fetch('api/tasks.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text })
-        });
-        const newTask = await response.json();
-        if (newTask.success) {
-            tasks.push(newTask);
-        }
-    } else {
-        const newTask = { id: Date.now(), text, done: false };
-        tasks.push(newTask);
-        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
-    }
+    const newTask = { id: Date.now(), text, done: false };
+    tasks.push(newTask);
+    localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
+
     taskInput.value = '';
     renderTasks();
 }
 
-async function updateTaskStatus(id, done) {
-    if (isLoggedIn) {
-        await fetch('api/tasks.php', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, done })
-        });
-    } else {
-        const taskIndex = tasks.findIndex(t => t.id === id);
-        if (taskIndex > -1) {
-            tasks[taskIndex].done = done;
-            localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
-        }
+function updateTaskStatus(id, done) {
+    const taskIndex = tasks.findIndex(t => t.id === id);
+    if (taskIndex > -1) {
+        tasks[taskIndex].done = done;
+        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
     }
 }
 
-async function deleteTask(id) {
-    if (isLoggedIn) {
-        await fetch(`api/tasks.php?id=${id}`, { method: 'DELETE' });
-    } else {
-        tasks = tasks.filter(t => t.id !== id);
-        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
-    }
+function deleteTask(id) {
+    tasks = tasks.filter(t => t.id !== id);
+    localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
 }
 
 function renderTasks() {
@@ -267,7 +104,7 @@ function renderTasks() {
     });
 }
 
-async function handleTaskListClick(e) {
+function handleTaskListClick(e) {
     const target = e.target;
     const action = target.dataset.action;
     const id = parseInt(target.dataset.id, 10);
@@ -278,10 +115,10 @@ async function handleTaskListClick(e) {
 
     if (action === 'toggle') {
         tasks[taskIndex].done = !tasks[taskIndex].done;
-        await updateTaskStatus(id, tasks[taskIndex].done);
+        updateTaskStatus(id, tasks[taskIndex].done);
     } else if (action === 'delete') {
         tasks.splice(taskIndex, 1);
-        await deleteTask(id);
+        deleteTask(id);
     }
     renderTasks();
 }
@@ -428,8 +265,8 @@ function pauseTimer() {
     isPaused = true;
     clearInterval(timerInterval);
     startTimerBtn.classList.remove('hidden');
-    pauseTimerBtn.classList.remove('hidden');
-    modeButtons.forEach(btn => btn.disabled = true);
+    pauseTimerBtn.classList.remove('hidden'); // Corrigido para mostrar o botão de pausar
+    modeButtons.forEach(btn => btn.disabled = true); // Mantém botões desabilitados
     prevPresetBtn.disabled = true;
     nextPresetBtn.disabled = true;
 }
@@ -449,19 +286,11 @@ function updateVolumeSlider() {
     const thumbPosition = (volume / 100) * sliderWidth;
     const tooltipOffset = thumbPosition - (volumeTooltip.offsetWidth / 2) + 8;
     volumeTooltip.style.left = `${tooltipOffset}px`;
-    playerVolumeSlider.style.background = `linear-gradient(to right, var(--accent-primary) ${percentage}, var(--border-color) ${percentage})`;
+    playerVolumeSlider.style.background = `linear-gradient(to right, #4f46e5 ${percentage}, #4b5563 ${percentage})`;
 }
 
 // --- INICIALIZAÇÃO ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Autenticação
-    loginBtnPanel.addEventListener('click', () => authModal.classList.remove('hidden'));
-    closeAuthModalBtn.addEventListener('click', () => authModal.classList.add('hidden'));
-    showRegisterBtn.addEventListener('click', showRegisterView);
-    showLoginBtn.addEventListener('click', showLoginView);
-    loginForm.addEventListener('submit', handleLogin);
-    registerForm.addEventListener('submit', handleRegister);
-
     // Pomodoro
     startTimerBtn.addEventListener('click', startTimer);
     pauseTimerBtn.addEventListener('click', pauseTimer);
@@ -486,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     localAudioPlayer.addEventListener('pause', () => {
         playerPlayIcon.classList.remove('hidden');
-        playerPauseIcon.classList.add('hidden');
+        playerPauseIcon.add('hidden');
     });
     playerVolumeSlider.addEventListener('input', () => {
         localAudioPlayer.volume = playerVolumeSlider.value / 100;
@@ -504,5 +333,5 @@ document.addEventListener('DOMContentLoaded', () => {
     updateVolumeSlider();
     setupRadioPlayer();
     requestNotificationPermission();
-    checkSession();
+    loadTasksFromLocalStorage(); // Carrega tarefas locais ao iniciar
 });
