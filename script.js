@@ -1,6 +1,13 @@
 'use strict';
 
-// Elementos do DOM (Pomodoro)
+// --- CONFIGURAÇÃO DO SUPABASE ---
+const SUPABASE_URL = 'https://xrbthqnegxbeerkjlcjx.supabase.co/';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhyYnRocW5lZ3hiZWVya2psY2p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MTE3NjUsImV4cCI6MjA2OTk4Nzc2NX0.jkeBlZfc_JLTXjlXMKH6dH8imyoVUndL-q8nY4pcTOA';
+
+const { createClient } = supabase;
+const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Elementos do DOM
 const timerDisplay = document.getElementById('timer-display');
 const startTimerBtn = document.getElementById('start-timer-btn');
 const pauseTimerBtn = document.getElementById('pause-timer-btn');
@@ -11,8 +18,6 @@ const modeButtons = document.querySelectorAll('.pomodoro-mode-btn');
 const presetDisplay = document.getElementById('preset-display');
 const prevPresetBtn = document.getElementById('prev-preset-btn');
 const nextPresetBtn = document.getElementById('next-preset-btn');
-
-// Elementos do DOM (Player)
 const localAudioPlayer = document.getElementById('local-audio-player');
 const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
 const playerPlayIcon = document.getElementById('player-play-icon');
@@ -20,18 +25,25 @@ const playerPauseIcon = document.getElementById('player-pause-icon');
 const playerVolumeSlider = document.getElementById('player-volume-slider');
 const playerCurrentTrackName = document.getElementById('player-current-track-name');
 const volumeTooltip = document.getElementById('volume-tooltip');
-
-// Elementos do DOM (Sons)
 const notificationSound = document.getElementById('notification-sound');
 const breakNotificationSound = document.getElementById('break-notification-sound');
 const warningSound = document.getElementById('warning-sound');
-
-// Elementos do DOM (Tarefas)
 const taskPanel = document.getElementById('task-panel');
 const toggleTasksBtn = document.getElementById('toggle-tasks-btn');
 const taskForm = document.getElementById('task-form');
 const taskInput = document.getElementById('task-input');
 const taskList = document.getElementById('task-list');
+const tasksContent = document.getElementById('tasks-content');
+const userSessionDisplay = document.getElementById('user-session-display');
+const authModal = document.getElementById('auth-modal');
+const closeAuthModalBtn = document.getElementById('close-auth-modal-btn');
+const loginView = document.getElementById('login-view');
+const registerView = document.getElementById('register-view');
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form');
+const showRegisterBtn = document.getElementById('show-register-btn');
+const showLoginBtn = document.getElementById('show-login-btn');
+const loader = document.getElementById('loader');
 
 // Variáveis de Estado
 let timerInterval;
@@ -41,7 +53,7 @@ let isPaused = true;
 let currentMode = 'focus';
 let tasks = [];
 let areSoundsUnlocked = false;
-let notificationPermission = "default";
+let user = null;
 
 const pomodoroPresets = {
     'default': { name: 'Padrão (4x25)', settings: { focusDuration: 25 * 60, shortBreakDuration: 5 * 60, longBreakDuration: 15 * 60, cyclesBeforeLongBreak: 4 } },
@@ -52,42 +64,119 @@ const presetKeys = Object.keys(pomodoroPresets);
 let currentPresetIndex = 0;
 let focusDuration, shortBreakDuration, longBreakDuration, cyclesBeforeLongBreak;
 
-// --- LÓGICA DE TAREFAS (APENAS LOCALSTORAGE) ---
-
-function loadTasksFromLocalStorage() {
-    const localTasks = localStorage.getItem('pomodoroTasks');
-    tasks = localTasks ? JSON.parse(localTasks) : [];
-    renderTasks();
+// --- LÓGICA DE AUTENTICAÇÃO E TAREFAS (SUPABASE) ---
+async function checkUser() {
+    const { data: { session } } = await _supabase.auth.getSession();
+    user = session?.user;
+    updateUIForUser();
+    fetchTasks();
 }
-
-function addTask(e) {
-    e.preventDefault();
-    const text = taskInput.value.trim();
-    if (!text) return;
-
-    const newTask = { id: Date.now(), text, done: false };
-    tasks.push(newTask);
-    localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
-
-    taskInput.value = '';
-    renderTasks();
-}
-
-function updateTaskStatus(id, done) {
-    const taskIndex = tasks.findIndex(t => t.id === id);
-    if (taskIndex > -1) {
-        tasks[taskIndex].done = done;
-        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
+function updateUIForUser() {
+    if (user) {
+        userSessionDisplay.innerHTML = `
+            <div class="flex items-center gap-4">
+                <span class="text-slate-300 font-semibold">Olá, ${user.email.split('@')[0]}</span>
+                <button id="logout-btn" class="text-sm text-indigo-400 hover:underline">Sair</button>
+            </div>`;
+        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+    } else {
+        userSessionDisplay.innerHTML = `
+            <button id="login-btn-main" class="py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                Fazer Login / Cadastrar
+            </button>`;
+        document.getElementById('login-btn-main').addEventListener('click', () => authModal.classList.remove('hidden'));
     }
 }
-
-function deleteTask(id) {
-    tasks = tasks.filter(t => t.id !== id);
-    localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
+async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+        alert(error.message);
+    } else {
+        user = data.user;
+        updateUIForUser();
+        fetchTasks();
+        authModal.classList.add('hidden');
+    }
 }
-
+async function handleRegister(e) {
+    e.preventDefault();
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    const passwordConfirm = document.getElementById('register-password-confirm').value;
+    if (password !== passwordConfirm) {
+        alert('As senhas não correspondem.');
+        return;
+    }
+    const { data, error } = await _supabase.auth.signUp({ email, password });
+    if (error) {
+        alert(error.message);
+    } else {
+        alert('Registro bem-sucedido! Verifique seu e-mail para confirmar.');
+        showLoginView();
+    }
+}
+async function handleLogout() {
+    const { error } = await _supabase.auth.signOut();
+    if (error) {
+        alert(error.message);
+    } else {
+        user = null;
+        tasks = [];
+        updateUIForUser();
+        renderTasks();
+    }
+}
+function showLoginView() {
+    loginView.classList.remove('hidden');
+    registerView.classList.add('hidden');
+}
+function showRegisterView() {
+    loginView.classList.add('hidden');
+    registerView.classList.remove('hidden');
+}
+async function fetchTasks() {
+    if (!user) {
+        taskList.innerHTML = `<li class="text-center text-slate-400 p-2">Faça login para ver suas tarefas.</li>`;
+        return;
+    }
+    const { data, error } = await _supabase.from('tasks').select('*').order('created_at', { ascending: true });
+    if (error) {
+        console.error('Erro ao buscar tarefas:', error);
+    } else {
+        tasks = data;
+        renderTasks();
+    }
+}
+async function addTask(e) {
+    e.preventDefault();
+    const text = taskInput.value.trim();
+    if (!text || !user) return;
+    const { data, error } = await _supabase.from('tasks').insert({ text: text, user_id: user.id }).select();
+    if (error) {
+        console.error('Erro ao adicionar tarefa:', error);
+    } else {
+        tasks.push(data[0]);
+        renderTasks();
+    }
+    taskInput.value = '';
+}
+async function updateTaskStatus(id, done) {
+    const { error } = await _supabase.from('tasks').update({ done: done }).eq('id', id);
+    if (error) console.error('Erro ao atualizar tarefa:', error);
+}
+async function deleteTask(id) {
+    const { error } = await _supabase.from('tasks').delete().eq('id', id);
+    if (error) console.error('Erro ao deletar tarefa:', error);
+}
 function renderTasks() {
     taskList.innerHTML = '';
+    if (!user) {
+        taskList.innerHTML = `<li class="text-center text-slate-400 p-2">Faça login para ver suas tarefas.</li>`;
+        return;
+    }
     if (tasks.length === 0) {
         taskList.innerHTML = `<li class="text-center text-slate-400 p-2">Nenhuma tarefa adicionada.</li>`;
         return;
@@ -103,22 +192,19 @@ function renderTasks() {
         taskList.appendChild(li);
     });
 }
-
-function handleTaskListClick(e) {
+async function handleTaskListClick(e) {
     const target = e.target;
     const action = target.dataset.action;
     const id = parseInt(target.dataset.id, 10);
-    if (!action || isNaN(id)) return;
-
+    if (!action || isNaN(id) || !user) return;
     const taskIndex = tasks.findIndex(t => t.id === id);
     if (taskIndex === -1) return;
-
     if (action === 'toggle') {
         tasks[taskIndex].done = !tasks[taskIndex].done;
-        updateTaskStatus(id, tasks[taskIndex].done);
+        await updateTaskStatus(id, tasks[taskIndex].done);
     } else if (action === 'delete') {
         tasks.splice(taskIndex, 1);
-        deleteTask(id);
+        await deleteTask(id);
     }
     renderTasks();
 }
@@ -265,8 +351,8 @@ function pauseTimer() {
     isPaused = true;
     clearInterval(timerInterval);
     startTimerBtn.classList.remove('hidden');
-    pauseTimerBtn.classList.remove('hidden'); // Corrigido para mostrar o botão de pausar
-    modeButtons.forEach(btn => btn.disabled = true); // Mantém botões desabilitados
+    pauseTimerBtn.classList.remove('hidden');
+    modeButtons.forEach(btn => btn.disabled = true);
     prevPresetBtn.disabled = true;
     nextPresetBtn.disabled = true;
 }
@@ -276,7 +362,7 @@ function requestNotificationPermission() {
     }
 }
 function showNotification(title, body) {
-    if (notificationPermission === "granted") new Notification(title, { body });
+    if (Notification.permission === "granted") new Notification(title, { body });
 }
 function updateVolumeSlider() {
     const volume = playerVolumeSlider.value;
@@ -286,11 +372,18 @@ function updateVolumeSlider() {
     const thumbPosition = (volume / 100) * sliderWidth;
     const tooltipOffset = thumbPosition - (volumeTooltip.offsetWidth / 2) + 8;
     volumeTooltip.style.left = `${tooltipOffset}px`;
-    playerVolumeSlider.style.background = `linear-gradient(to right, #4f46e5 ${percentage}, #4b5563 ${percentage})`;
+    playerVolumeSlider.style.background = `linear-gradient(to right, var(--accent-primary) ${percentage}, var(--border-color) ${percentage})`;
 }
 
 // --- INICIALIZAÇÃO ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Autenticação
+    closeAuthModalBtn.addEventListener('click', () => authModal.classList.add('hidden'));
+    showRegisterBtn.addEventListener('click', showRegisterView);
+    showLoginBtn.addEventListener('click', showLoginView);
+    loginForm.addEventListener('submit', handleLogin);
+    registerForm.addEventListener('submit', handleRegister);
+
     // Pomodoro
     startTimerBtn.addEventListener('click', startTimer);
     pauseTimerBtn.addEventListener('click', pauseTimer);
@@ -315,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     localAudioPlayer.addEventListener('pause', () => {
         playerPlayIcon.classList.remove('hidden');
-        playerPauseIcon.add('hidden');
+        playerPauseIcon.classList.add('hidden');
     });
     playerVolumeSlider.addEventListener('input', () => {
         localAudioPlayer.volume = playerVolumeSlider.value / 100;
@@ -333,5 +426,17 @@ document.addEventListener('DOMContentLoaded', () => {
     updateVolumeSlider();
     setupRadioPlayer();
     requestNotificationPermission();
-    loadTasksFromLocalStorage(); // Carrega tarefas locais ao iniciar
+    checkUser();
+});
+
+// ✅ LÓGICA DA TELA DE CARREGAMENTO MELHORADA
+window.addEventListener('load', () => {
+    if (loader) {
+        // Garante que a tela de carregamento seja exibida por pelo menos 10 segundos
+        const minLoadingTime = new Promise(resolve => setTimeout(resolve, 5000));
+
+        Promise.all([minLoadingTime, document.fonts.ready]).then(() => {
+             loader.classList.add('hidden');
+        });
+    }
 });
