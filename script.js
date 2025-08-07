@@ -403,7 +403,7 @@ function navigatePresets(direction) {
     updatePresetDisplay(false, direction);
 }
 function setupRadioPlayer() {
-    localAudioPlayer.src = 'http://stream.laut.fm/lofi';
+    localAudioPlayer.src = 'https://lofi.stream.laut.fm/lofi';
     playerCurrentTrackName.textContent = 'Rádio Lo-Fi';
 }
 function toggleMusicPlayer() {
