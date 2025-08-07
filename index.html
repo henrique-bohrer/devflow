@@ -76,7 +76,11 @@
         </div>
       </section>
 
-      <footer class="text-center mt-12 py-6 w-full">
+      <div class="text-center mt-12 w-full">
+        <button id="pix-donation-btn" class="text-sm text-indigo-400 hover:underline">Apoiar com PIX</button>
+      </div>
+
+      <footer class="text-center py-6 w-full">
         <p class="text-sm text-slate-400">&copy; <span id="current-year"></span> DevFlow</p>
       </footer>
     </div>
@@ -192,6 +196,25 @@
   <audio id="notification-sound" src="short-alarm-clock.mp3" preload="auto"></audio>
   <audio id="break-notification-sound" src="tic-tac.mp3" preload="auto"></audio>
   <audio id="warning-sound" src="tic-tac.mp3" preload="auto"></audio>
+
+  <!-- PIX Donation Modal -->
+  <div id="pix-modal"
+    class="auth-modal-container fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+    <div class="w-full max-w-sm bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 relative">
+      <button id="close-pix-modal-btn"
+        class="absolute top-4 right-4 h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors"><i
+          class="fa-solid fa-times"></i></button>
+      <h3 class="text-2xl font-bold text-slate-100 mb-4 text-center">Apoie este projeto!</h3>
+      <p class="text-center text-slate-400 mb-6">Se esta ferramenta foi útil para você, considere fazer uma doação via
+        PIX.</p>
+      <div class="bg-slate-700 p-4 rounded-lg text-center">
+        <p class="text-sm text-slate-400">Chave PIX (Aleatória):</p>
+        <p id="pix-key" class="font-mono text-lg text-white my-2 break-all">e64fbe84-76bc-4a3f-9d17-cd03ff3d7fa9</p>
+        <button id="copy-pix-key-btn"
+          class="btn w-full py-2 mt-4 bg-indigo-600 text-white font-semibold rounded-lg">Copiar Chave</button>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>

@@ -48,6 +48,11 @@ const showLoginBtn = document.getElementById('show-login-btn');
 const loader = document.getElementById('loader');
 const loaderParagraph = document.getElementById('loader-paragraph');
 const closeTasksBtn = document.getElementById('close-tasks-btn');
+const pixDonationBtn = document.getElementById('pix-donation-btn');
+const pixModal = document.getElementById('pix-modal');
+const closePixModalBtn = document.getElementById('close-pix-modal-btn');
+const copyPixKeyBtn = document.getElementById('copy-pix-key-btn');
+const pixKey = document.getElementById('pix-key');
 
 // Variáveis de Estado
 let timerInterval;
@@ -265,14 +270,11 @@ async function handleTaskListClick(e) {
     if (action === 'toggle') {
         tasks[taskIndex].done = !tasks[taskIndex].done;
         await updateTaskStatus(id, tasks[taskIndex].done);
-
-        // Atualiza a UI sem rerenderizar tudo
-        const span = li.querySelector('span');
-        li.classList.toggle('done');
-        li.classList.toggle('bg-slate-700/50');
-        li.classList.toggle('text-slate-500');
-        li.classList.toggle('bg-slate-700');
-        span.classList.toggle('line-through');
+        const newLi = createTaskElement(tasks[taskIndex]);
+        li.replaceWith(newLi);
+        // Adiciona uma classe para uma animação sutil de transição, se desejado
+        newLi.classList.add('task-updated');
+        setTimeout(() => newLi.classList.remove('task-updated'), 300);
 
     } else if (action === 'delete') {
         li.classList.add('task-item-deleting');
@@ -511,6 +513,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Inicialização Geral
     document.getElementById('current-year').textContent = new Date().getFullYear();
+
+    // Lógica do Modal PIX
+    if(pixDonationBtn) {
+        pixDonationBtn.addEventListener('click', () => pixModal.classList.add('is-open'));
+    }
+    if(closePixModalBtn) {
+        closePixModalBtn.addEventListener('click', () => pixModal.classList.remove('is-open'));
+    }
+    if(copyPixKeyBtn) {
+        copyPixKeyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(pixKey.textContent).then(() => {
+                copyPixKeyBtn.textContent = 'Copiado!';
+                setTimeout(() => {
+                    copyPixKeyBtn.textContent = 'Copiar Chave';
+                }, 2000);
+            });
+        });
+    }
+
     loadPomodoroSettings();
     updateVolumeSlider();
     setupRadioPlayer();
