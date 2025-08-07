@@ -291,12 +291,15 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
 #ai-chat-window {
   transform-origin: bottom left;
   transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-#ai-chat-window.hidden {
   opacity: 0;
   transform: scale(0.95);
   pointer-events: none;
+}
+
+#ai-chat-window.is-chat-open {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
 }
 
 .chat-message {

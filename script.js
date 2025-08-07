@@ -101,13 +101,19 @@ function updateUIForUser() {
                 <span class="text-slate-300 font-semibold">Olá, ${user.email.split('@')[0]}</span>
                 <button id="logout-btn" class="text-sm text-indigo-400 hover:underline">Sair</button>
             </div>`;
-        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', handleLogout);
+        }
     } else {
         userSessionDisplay.innerHTML = `
             <button id="login-btn-main" class="btn py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
                 Fazer Login / Cadastrar
             </button>`;
-        document.getElementById('login-btn-main').addEventListener('click', () => authModal.classList.add('is-open'));
+        const loginBtn = document.getElementById('login-btn-main');
+        if (loginBtn && authModal) {
+            loginBtn.addEventListener('click', () => authModal.classList.add('is-open'));
+        }
     }
 }
 async function handleLogin(e) {
@@ -397,7 +403,7 @@ function navigatePresets(direction) {
     updatePresetDisplay(false, direction);
 }
 function setupRadioPlayer() {
-    localAudioPlayer.src = 'http://stream.laut.fm/lofi';
+    localAudioPlayer.src = 'https://lofi.stream.laut.fm/lofi';
     playerCurrentTrackName.textContent = 'Rádio Lo-Fi';
 }
 function toggleMusicPlayer() {
@@ -543,42 +549,46 @@ function updateVolumeSlider() {
 // --- INICIALIZAÇÃO ---
 document.addEventListener('DOMContentLoaded', () => {
     // Autenticação
-    closeAuthModalBtn.addEventListener('click', () => authModal.classList.remove('is-open'));
-    showRegisterBtn.addEventListener('click', showRegisterView);
-    showLoginBtn.addEventListener('click', showLoginView);
-    loginForm.addEventListener('submit', handleLogin);
-    registerForm.addEventListener('submit', handleRegister);
+    if (closeAuthModalBtn && authModal) {
+        closeAuthModalBtn.addEventListener('click', () => authModal.classList.remove('is-open'));
+    }
+    if (showRegisterBtn) showRegisterBtn.addEventListener('click', showRegisterView);
+    if (showLoginBtn) showLoginBtn.addEventListener('click', showLoginView);
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
+    if (registerForm) registerForm.addEventListener('submit', handleRegister);
 
     // Pomodoro
-    startTimerBtn.addEventListener('click', startTimer);
-    pauseTimerBtn.addEventListener('click', pauseTimer);
-    resetTimerBtn.addEventListener('click', () => {
+    if (startTimerBtn) startTimerBtn.addEventListener('click', startTimer);
+    if (pauseTimerBtn) pauseTimerBtn.addEventListener('click', pauseTimer);
+    if (resetTimerBtn) resetTimerBtn.addEventListener('click', () => {
         setMode('focus', true);
-        prevPresetBtn.disabled = false;
-        nextPresetBtn.disabled = false;
+        if (prevPresetBtn) prevPresetBtn.disabled = false;
+        if (nextPresetBtn) nextPresetBtn.disabled = false;
     });
-    modeButtons.forEach(btn => {
+    if (modeButtons) modeButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             if (isPaused && btn.dataset.mode === 'focus') setMode('focus');
         });
     });
-    prevPresetBtn.addEventListener('click', () => navigatePresets(-1));
-    nextPresetBtn.addEventListener('click', () => navigatePresets(1));
+    if (prevPresetBtn) prevPresetBtn.addEventListener('click', () => navigatePresets(-1));
+    if (nextPresetBtn) nextPresetBtn.addEventListener('click', () => navigatePresets(1));
 
     // Player
-    playerPlayPauseBtn.addEventListener('click', toggleMusicPlayer);
-    localAudioPlayer.addEventListener('play', () => {
-        if (playPauseIconContainer) playPauseIconContainer.innerHTML = `<i class="fa-solid fa-pause fa-lg"></i>`;
-    });
-    localAudioPlayer.addEventListener('pause', () => {
-        if (playPauseIconContainer) playPauseIconContainer.innerHTML = `<i class="fa-solid fa-play fa-lg"></i>`;
-    });
-    playerVolumeSlider.addEventListener('input', () => {
-        localAudioPlayer.volume = playerVolumeSlider.value / 100;
+    if (playerPlayPauseBtn) playerPlayPauseBtn.addEventListener('click', toggleMusicPlayer);
+    if (localAudioPlayer) {
+        localAudioPlayer.addEventListener('play', () => {
+            if (playPauseIconContainer) playPauseIconContainer.innerHTML = `<i class="fa-solid fa-pause fa-lg"></i>`;
+        });
+        localAudioPlayer.addEventListener('pause', () => {
+            if (playPauseIconContainer) playPauseIconContainer.innerHTML = `<i class="fa-solid fa-play fa-lg"></i>`;
+        });
+    }
+    if (playerVolumeSlider) playerVolumeSlider.addEventListener('input', () => {
+        if (localAudioPlayer) localAudioPlayer.volume = playerVolumeSlider.value / 100;
         updateVolumeSlider();
     });
 
-    if (toggleVolumeBtn) {
+    if (toggleVolumeBtn && volumeControlContainer) {
         toggleVolumeBtn.addEventListener('click', () => {
             volumeControlContainer.classList.toggle('hidden');
             volumeControlContainer.classList.toggle('flex');
@@ -586,37 +596,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Tarefas
-    taskForm.addEventListener('submit', addTask);
-    taskList.addEventListener('click', handleTaskListClick);
-    toggleTasksBtn.addEventListener('click', () => taskPanel.classList.toggle('is-open'));
-    closeTasksBtn.addEventListener('click', () => taskPanel.classList.remove('is-open'));
+    if (taskForm) taskForm.addEventListener('submit', addTask);
+    if (taskList) taskList.addEventListener('click', handleTaskListClick);
+    if (toggleTasksBtn && taskPanel) toggleTasksBtn.addEventListener('click', () => taskPanel.classList.toggle('is-open'));
+    if (closeTasksBtn && taskPanel) closeTasksBtn.addEventListener('click', () => taskPanel.classList.remove('is-open'));
 
     // Assistente de IA
-    if (aiAssistantBtn) {
+    if (aiAssistantBtn && aiChatWindow) {
         aiAssistantBtn.addEventListener('click', () => {
-            aiChatWindow.classList.toggle('hidden');
+            aiChatWindow.classList.toggle('is-chat-open');
         });
     }
-    if (closeChatBtn) {
+    if (closeChatBtn && aiChatWindow) {
         closeChatBtn.addEventListener('click', () => {
-            aiChatWindow.classList.add('hidden');
+            aiChatWindow.classList.remove('is-chat-open');
         });
     }
     if (chatForm) {
         chatForm.addEventListener('submit', handleChatSubmit);
     }
 
-    // Inicialização Geral
-    document.getElementById('current-year').textContent = new Date().getFullYear();
-
     // Lógica do Modal PIX
-    if(pixDonationBtn) {
+    if (pixDonationBtn && pixModal) {
         pixDonationBtn.addEventListener('click', () => pixModal.classList.add('is-open'));
     }
-    if(closePixModalBtn) {
+    if (closePixModalBtn && pixModal) {
         closePixModalBtn.addEventListener('click', () => pixModal.classList.remove('is-open'));
     }
-    if(copyPixKeyBtn) {
+    if (copyPixKeyBtn && pixKey) {
         copyPixKeyBtn.addEventListener('click', () => {
             navigator.clipboard.writeText(pixKey.textContent).then(() => {
                 copyPixKeyBtn.textContent = 'Copiado!';
@@ -627,6 +634,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Inicialização Geral
+    const currentYearEl = document.getElementById('current-year');
+    if (currentYearEl) currentYearEl.textContent = new Date().getFullYear();
     loadPomodoroSettings();
     updateVolumeSlider();
     setupRadioPlayer();

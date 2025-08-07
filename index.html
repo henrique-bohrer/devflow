@@ -37,7 +37,12 @@
       </header>
 
       <section id="pomodoro-section"
-        class="w-full bg-slate-800 p-4 sm:p-8 rounded-2xl shadow-2xl border border-slate-700">
+        class="relative w-full bg-slate-800 p-4 sm:p-8 rounded-2xl shadow-2xl border border-slate-700">
+        <div id="ai-assistant-container" class="absolute top-4 right-4 z-10">
+          <button id="ai-assistant-btn" class="w-12 h-12 transition-transform hover:scale-110">
+            <img src="icone.png" alt="Assistente IA" class="w-full h-full object-contain">
+          </button>
+        </div>
         <h2 id="current-mode-display"
           class="text-xl sm:text-2xl font-semibold mb-4 text-center text-indigo-400 transition-colors duration-300">Modo Foco</h2>
         <div id="timer-display" class="text-6xl sm:text-7xl md:text-8xl font-extrabold text-center my-6 text-slate-100">25:00</div>
@@ -202,6 +207,7 @@
       <h3 class="text-2xl font-bold text-slate-100 mb-4 text-center">Apoie este projeto!</h3>
       <p class="text-center text-slate-400 mb-6">Se esta ferramenta foi útil para você, considere fazer uma doação via PIX.</p>
       <div class="bg-slate-700 p-4 rounded-lg text-center">
+        <img src="qrcode-pix.png" alt="QR Code PIX" class="w-48 h-48 mx-auto mb-4 rounded-lg">
         <p class="text-sm text-slate-400">Chave PIX (Aleatória):</p>
         <p id="pix-key" class="font-mono text-lg text-white my-2 break-all">e64fbe84-76bc-4a3f-9d17-cd03ff3d7fa9</p>
         <button id="copy-pix-key-btn" class="btn w-full py-2 mt-4 bg-indigo-600 text-white font-semibold rounded-lg">Copiar Chave</button>
@@ -209,17 +215,8 @@
     </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="script.js"></script>
-
-  <!-- AI Assistant -->
-  <div id="ai-assistant-container" class="fixed bottom-6 left-6 z-50">
-    <button id="ai-assistant-btn" class="w-16 h-16 transition-transform hover:scale-110">
-      <img src="icone.png" alt="Assistente IA" class="w-full h-full object-contain">
-    </button>
-  </div>
-
-  <div id="ai-chat-window" class="hidden fixed bottom-28 left-6 w-80 max-w-[90vw] bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 z-50 flex-col">
+  <!-- AI Assistant Chat Window -->
+  <div id="ai-chat-window" class="fixed bottom-28 left-6 w-80 max-w-[90vw] bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 z-50 flex-col">
     <div class="p-4 border-b border-slate-700 flex justify-between items-center">
       <h4 class="text-lg font-bold">Assistente Pomodoro</h4>
       <button id="close-chat-btn" class="h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors">
@@ -251,6 +248,9 @@
       <i class="fa-brands fa-github fa-lg"></i>
     </a>
   </div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
 </body>
 
 </html>
