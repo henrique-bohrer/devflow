@@ -20,8 +20,7 @@ const prevPresetBtn = document.getElementById('prev-preset-btn');
 const nextPresetBtn = document.getElementById('next-preset-btn');
 const localAudioPlayer = document.getElementById('local-audio-player');
 const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
-const playerPlayIcon = document.getElementById('player-play-icon');
-const playerPauseIcon = document.getElementById('player-pause-icon');
+const playPauseIconContainer = document.getElementById('play-pause-icon-container');
 const playerVolumeSlider = document.getElementById('player-volume-slider');
 const playerCurrentTrackName = document.getElementById('player-current-track-name');
 const volumeTooltip = document.getElementById('volume-tooltip');
@@ -486,12 +485,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Player
     playerPlayPauseBtn.addEventListener('click', toggleMusicPlayer);
     localAudioPlayer.addEventListener('play', () => {
-        playerPlayIcon.classList.add('hidden');
-        playerPauseIcon.classList.remove('hidden');
+        if (playPauseIconContainer) playPauseIconContainer.innerHTML = `<i class="fa-solid fa-pause fa-lg"></i>`;
     });
     localAudioPlayer.addEventListener('pause', () => {
-        playerPlayIcon.classList.remove('hidden');
-        playerPauseIcon.classList.add('hidden');
+        if (playPauseIconContainer) playPauseIconContainer.innerHTML = `<i class="fa-solid fa-play fa-lg"></i>`;
     });
     playerVolumeSlider.addEventListener('input', () => {
         localAudioPlayer.volume = playerVolumeSlider.value / 100;
