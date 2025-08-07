@@ -25,6 +25,8 @@ const playerPauseIcon = document.getElementById('player-pause-icon');
 const playerVolumeSlider = document.getElementById('player-volume-slider');
 const playerCurrentTrackName = document.getElementById('player-current-track-name');
 const volumeTooltip = document.getElementById('volume-tooltip');
+const volumeControlContainer = document.getElementById('volume-control-container');
+const toggleVolumeBtn = document.getElementById('toggle-volume-btn');
 const notificationSound = document.getElementById('notification-sound');
 const breakNotificationSound = document.getElementById('break-notification-sound');
 const warningSound = document.getElementById('warning-sound');
@@ -87,10 +89,10 @@ function updateUIForUser() {
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
     } else {
         userSessionDisplay.innerHTML = `
-            <button id="login-btn-main" class="py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+            <button id="login-btn-main" class="btn py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
                 Fazer Login / Cadastrar
             </button>`;
-        document.getElementById('login-btn-main').addEventListener('click', () => authModal.classList.remove('hidden'));
+        document.getElementById('login-btn-main').addEventListener('click', () => authModal.classList.add('is-open'));
     }
 }
 async function handleLogin(e) {
@@ -104,7 +106,7 @@ async function handleLogin(e) {
         user = data.user;
         updateUIForUser();
         await fetchTasks();
-        authModal.classList.add('hidden');
+        authModal.classList.remove('is-open');
     }
 }
 async function handleRegister(e) {
@@ -193,6 +195,18 @@ async function deleteTask(id) {
         localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
     }
 }
+function createTaskElement(task) {
+    const li = document.createElement('li');
+    li.className = `flex items-center justify-between p-3 rounded-lg transition-colors ${task.done ? 'bg-slate-700/50 text-slate-500 done' : 'bg-slate-700'}`;
+    li.dataset.taskId = task.id;
+    li.innerHTML = `
+        <span class="flex-grow cursor-pointer ${task.done ? 'line-through' : ''}" data-action="toggle" data-id="${task.id}">${task.text}</span>
+        <button data-action="delete" data-id="${task.id}" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
+            <i class="fa-solid fa-times pointer-events-none"></i>
+        </button>`;
+    return li;
+}
+
 function renderTasks() {
     taskList.innerHTML = '';
     if (tasks.length === 0) {
@@ -200,16 +214,43 @@ function renderTasks() {
         return;
     }
     tasks.forEach(task => {
-        const li = document.createElement('li');
-        li.className = `flex items-center justify-between p-3 rounded-lg transition-colors ${task.done ? 'bg-green-500/10 text-slate-500' : 'bg-slate-700'}`;
-        li.innerHTML = `
-            <span class="flex-grow cursor-pointer ${task.done ? 'line-through' : ''}" data-action="toggle" data-id="${task.id}">${task.text}</span>
-            <button data-action="delete" data-id="${task.id}" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
-                <i class="fa-solid fa-times pointer-events-none"></i>
-            </button>`;
+        const li = createTaskElement(task);
         taskList.appendChild(li);
     });
 }
+
+async function addTask(e) {
+    e.preventDefault();
+    const text = taskInput.value.trim();
+    if (!text) return;
+
+    let newTaskId;
+    if (user) {
+        const { data, error } = await _supabase.from('tasks').insert({ text: text, user_id: user.id }).select();
+        if (error) {
+            console.error('Erro ao adicionar tarefa:', error);
+            return;
+        }
+        tasks.push(data[0]);
+        newTaskId = data[0].id;
+    } else {
+        const newTask = { id: Date.now(), text, done: false, created_at: new Date().toISOString() };
+        tasks.push(newTask);
+        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
+        newTaskId = newTask.id;
+    }
+
+    const newTask = tasks.find(t => t.id === newTaskId);
+    const li = createTaskElement(newTask);
+    li.classList.add('slide-in-from-right');
+
+    if (taskList.querySelector('.text-center')) {
+        taskList.innerHTML = '';
+    }
+    taskList.appendChild(li);
+    taskInput.value = '';
+}
+
 async function handleTaskListClick(e) {
     const target = e.target;
     const action = target.dataset.action;
@@ -219,14 +260,31 @@ async function handleTaskListClick(e) {
     const taskIndex = tasks.findIndex(t => t.id === id);
     if (taskIndex === -1) return;
 
+    const li = target.closest('li');
+
     if (action === 'toggle') {
         tasks[taskIndex].done = !tasks[taskIndex].done;
         await updateTaskStatus(id, tasks[taskIndex].done);
+
+        // Atualiza a UI sem rerenderizar tudo
+        const span = li.querySelector('span');
+        li.classList.toggle('done');
+        li.classList.toggle('bg-slate-700/50');
+        li.classList.toggle('text-slate-500');
+        li.classList.toggle('bg-slate-700');
+        span.classList.toggle('line-through');
+
     } else if (action === 'delete') {
-        tasks.splice(taskIndex, 1);
-        await deleteTask(id);
+        li.classList.add('task-item-deleting');
+        li.addEventListener('animationend', async () => {
+            tasks.splice(taskIndex, 1);
+            await deleteTask(id);
+            li.remove();
+            if (tasks.length === 0) {
+                renderTasks(); // Para mostrar o placeholder
+            }
+        });
     }
-    renderTasks();
 }
 
 // --- LÓGICA DO POMODORO (Existente) ---
@@ -311,6 +369,7 @@ function setMode(mode, manualReset = false) {
     clearInterval(timerInterval);
     timeLeft = { focus: focusDuration, shortBreak: shortBreakDuration, longBreak: longBreakDuration }[mode];
     timerDisplay.classList.remove('timer-warning');
+    timerDisplay.classList.remove('timer-glowing');
     updateTimerDisplay();
     updateModeDisplay();
     startTimerBtn.classList.remove('hidden');
@@ -338,6 +397,7 @@ function startTimer() {
         toggleMusicPlayer();
     }
     isPaused = false;
+    timerDisplay.classList.add('timer-glowing');
     startTimerBtn.classList.add('hidden');
     pauseTimerBtn.classList.remove('hidden');
     modeButtons.forEach(btn => btn.disabled = true);
@@ -370,6 +430,7 @@ function startTimer() {
 function pauseTimer() {
     isPaused = true;
     clearInterval(timerInterval);
+    timerDisplay.classList.remove('timer-glowing');
     startTimerBtn.classList.remove('hidden');
     pauseTimerBtn.classList.remove('hidden');
     modeButtons.forEach(btn => btn.disabled = true);
@@ -398,7 +459,7 @@ function updateVolumeSlider() {
 // --- INICIALIZAÇÃO ---
 document.addEventListener('DOMContentLoaded', () => {
     // Autenticação
-    closeAuthModalBtn.addEventListener('click', () => authModal.classList.add('hidden'));
+    closeAuthModalBtn.addEventListener('click', () => authModal.classList.remove('is-open'));
     showRegisterBtn.addEventListener('click', showRegisterView);
     showLoginBtn.addEventListener('click', showLoginView);
     loginForm.addEventListener('submit', handleLogin);
@@ -434,6 +495,13 @@ document.addEventListener('DOMContentLoaded', () => {
         localAudioPlayer.volume = playerVolumeSlider.value / 100;
         updateVolumeSlider();
     });
+
+    if (toggleVolumeBtn) {
+        toggleVolumeBtn.addEventListener('click', () => {
+            volumeControlContainer.classList.toggle('hidden');
+            volumeControlContainer.classList.toggle('flex');
+        });
+    }
 
     // Tarefas
     taskForm.addEventListener('submit', addTask);
