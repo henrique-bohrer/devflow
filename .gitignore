@@ -1,0 +1,9 @@
+# Arquivo de configuração com chaves de API
+config.js
+
+# Arquivos de dependência do Node.js
+node_modules/
+
+# Logs e arquivos temporários
+*.log
+jules-scratch/

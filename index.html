@@ -32,15 +32,15 @@
   <main class="flex-grow p-4 md:p-6 pb-32 flex items-center min-h-screen">
     <div class="w-full max-w-md mx-auto flex flex-col items-center">
       <header class="text-center mb-8 w-full">
-        <h1 class="text-4xl md:text-5xl font-bold title-gradient">DevFlow Pomodoro</h1>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold title-gradient">DevFlow Pomodoro</h1>
         <p class="text-slate-400 mt-2">Uma ferramenta simples para máxima produtividade.</p>
       </header>
 
       <section id="pomodoro-section"
-        class="w-full bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-2xl border border-slate-700">
+        class="w-full bg-slate-800 p-4 sm:p-8 rounded-2xl shadow-2xl border border-slate-700">
         <h2 id="current-mode-display"
-          class="text-2xl font-semibold mb-4 text-center text-indigo-400 transition-colors duration-300">Modo Foco</h2>
-        <div id="timer-display" class="text-7xl sm:text-8xl font-extrabold text-center my-6 text-slate-100">25:00</div>
+          class="text-xl sm:text-2xl font-semibold mb-4 text-center text-indigo-400 transition-colors duration-300">Modo Foco</h2>
+        <div id="timer-display" class="text-6xl sm:text-7xl md:text-8xl font-extrabold text-center my-6 text-slate-100">25:00</div>
 
         <div class="my-6">
           <div class="flex items-center justify-center space-x-4">
@@ -61,11 +61,11 @@
 
         <div class="flex justify-center space-x-4">
           <button id="start-timer-btn"
-            class="py-3 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200">Iniciar</button>
+            class="btn py-3 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200">Iniciar</button>
           <button id="pause-timer-btn"
-            class="py-3 px-8 bg-slate-500 hover:bg-slate-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hidden">Pausar</button>
+            class="btn py-3 px-8 bg-slate-500 hover:bg-slate-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hidden">Pausar</button>
           <button id="reset-timer-btn"
-            class="h-12 w-12 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center"><i
+            class="btn h-12 w-12 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center"><i
               class="fa-solid fa-sync"></i></button>
         </div>
 
@@ -74,14 +74,18 @@
         </div>
       </section>
 
-      <footer class="text-center mt-12 py-6 w-full">
+      <div class="text-center mt-12 w-full">
+        <button id="pix-donation-btn" class="text-sm text-indigo-400 hover:underline">Apoiar com PIX</button>
+      </div>
+
+      <footer class="text-center py-6 w-full">
         <p class="text-sm text-slate-400">&copy; <span id="current-year"></span> DevFlow</p>
       </footer>
     </div>
   </main>
 
   <button id="toggle-tasks-btn"
-    class="fixed bottom-24 right-4 h-16 w-16 bg-indigo-600 rounded-full shadow-lg flex items-center justify-center text-white transform hover:scale-110 transition-transform duration-200 z-50">
+    class="btn fixed bottom-24 right-4 h-16 w-16 bg-indigo-600 rounded-full shadow-lg flex items-center justify-center text-white transform hover:scale-110 transition-transform duration-200 z-50">
     <i class="fa-solid fa-list-check fa-2x"></i>
   </button>
 
@@ -99,7 +103,7 @@
           <input type="text" id="task-input" placeholder="Adicionar nova tarefa..."
             class="flex-grow p-3 border border-slate-600 rounded-lg bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition text-white">
           <button type="submit"
-            class="py-3 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200">Add</button>
+            class="btn py-3 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200">Add</button>
         </form>
         <ul id="task-list" class="flex-grow space-y-2 overflow-y-auto custom-scrollbar pr-2"></ul>
       </div>
@@ -108,33 +112,47 @@
 
   <footer id="footer-music-player"
     class="fixed bottom-0 left-0 w-full bg-slate-900/70 backdrop-blur-xl border-t border-slate-800 z-40">
-    <div class="max-w-xl mx-auto p-4 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-4 flex-shrink-0">
-        <button id="player-prev-btn"
-          class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
-          disabled><i class="fa-solid fa-backward-step fa-lg"></i></button>
-        <button id="player-play-pause-btn"
-          class="w-12 h-12 flex items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transform hover:scale-105 transition-transform"><i
-            id="player-play-icon" class="fa-solid fa-play fa-lg"></i><i id="player-pause-icon"
-            class="fa-solid fa-pause fa-lg hidden"></i></button>
-        <button id="player-next-btn"
-          class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
-          disabled><i class="fa-solid fa-forward-step fa-lg"></i></button>
+    <div class="max-w-xl mx-auto p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+
+      <div class="w-full sm:w-auto flex items-center justify-between">
+        <!-- Controles de Mídia -->
+        <div class="flex items-center gap-4 flex-shrink-0">
+          <button id="player-prev-btn"
+            class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+            disabled><i class="fa-solid fa-backward-step fa-lg"></i></button>
+          <button id="player-play-pause-btn"
+            class="btn w-12 h-12 flex items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transform hover:scale-105 transition-transform">
+            <span id="play-pause-icon-container">
+              <i class="fa-solid fa-play fa-lg"></i>
+            </span>
+          </button>
+          <button id="player-next-btn"
+            class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+            disabled><i class="fa-solid fa-forward-step fa-lg"></i></button>
+        </div>
+
+        <!-- Botão de Volume (Mobile) -->
+        <button id="toggle-volume-btn" class="w-10 h-10 flex sm:hidden items-center justify-center text-slate-400 hover:text-white transition-colors">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
       </div>
-      <div class="w-full flex-grow flex flex-col gap-1.5 mx-4">
+
+      <!-- Informações da Faixa e Volume Slider -->
+      <div class="w-full flex-grow flex flex-col items-center gap-1.5">
         <p id="player-current-track-name" class="font-semibold text-sm truncate text-center">Rádio Lo-Fi</p>
-        <div class="w-full h-2"></div>
-      </div>
-      <div id="volume-control-container" class="flex items-center gap-2 flex-shrink-0 relative">
-        <i class="fa-solid fa-volume-low text-slate-500"></i>
-        <span id="volume-tooltip" class="volume-tooltip">80%</span>
-        <input type="range" id="player-volume-slider" value="80" class="w-20 player-slider">
+
+        <!-- Container do Volume (inclui ícone e slider) -->
+        <div id="volume-control-container" class="w-full max-w-xs items-center gap-2 flex-shrink-0 relative hidden sm:flex">
+          <i class="fa-solid fa-volume-low text-slate-500"></i>
+          <span id="volume-tooltip" class="volume-tooltip">80%</span>
+          <input type="range" id="player-volume-slider" value="80" class="w-full player-slider">
+        </div>
       </div>
     </div>
   </footer>
 
   <div id="auth-modal"
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] hidden">
+    class="auth-modal-container fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
     <div class="w-full max-w-sm bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 relative">
       <button id="close-auth-modal-btn"
         class="absolute top-4 right-4 h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors"><i
@@ -146,7 +164,7 @@
             class="w-full p-3 mb-4 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           <input type="password" id="login-password" placeholder="Senha"
             class="w-full p-3 mb-6 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg">Entrar</button>
+          <button type="submit" class="btn w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg">Entrar</button>
         </form>
         <p class="text-center text-sm text-slate-400 mt-4">Não tem uma conta? <button id="show-register-btn"
             class="font-semibold text-indigo-400 hover:underline">Registre-se</button></p>
@@ -160,7 +178,7 @@
             class="w-full p-3 mb-4 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           <input type="password" id="register-password-confirm" placeholder="Confirmar Senha"
             class="w-full p-3 mb-6 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg">Criar
+          <button type="submit" class="btn w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg">Criar
             Conta</button>
         </form>
         <p class="text-center text-sm text-slate-400 mt-4">Já tem uma conta? <button id="show-login-btn"
@@ -174,7 +192,65 @@
   <audio id="break-notification-sound" src="tic-tac.mp3" preload="auto"></audio>
   <audio id="warning-sound" src="tic-tac.mp3" preload="auto"></audio>
 
+  <!-- PIX Donation Modal -->
+  <div id="pix-modal"
+    class="auth-modal-container fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+    <div class="w-full max-w-sm bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 relative">
+      <button id="close-pix-modal-btn"
+        class="absolute top-4 right-4 h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors"><i
+          class="fa-solid fa-times"></i></button>
+      <h3 class="text-2xl font-bold text-slate-100 mb-4 text-center">Apoie este projeto!</h3>
+      <p class="text-center text-slate-400 mb-6">Se esta ferramenta foi útil para você, considere fazer uma doação via PIX.</p>
+      <div class="bg-slate-700 p-4 rounded-lg text-center">
+        <p class="text-sm text-slate-400">Chave PIX (Aleatória):</p>
+        <p id="pix-key" class="font-mono text-lg text-white my-2 break-all">e64fbe84-76bc-4a3f-9d17-cd03ff3d7fa9</p>
+        <button id="copy-pix-key-btn" class="btn w-full py-2 mt-4 bg-indigo-600 text-white font-semibold rounded-lg">Copiar Chave</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
   <script src="script.js"></script>
+
+  <!-- AI Assistant -->
+  <div id="ai-assistant-container" class="fixed bottom-6 left-6 z-50">
+    <button id="ai-assistant-btn" class="w-16 h-16 transition-transform hover:scale-110">
+      <img src="icone.png" alt="Assistente IA" class="w-full h-full object-contain">
+    </button>
+  </div>
+
+  <div id="ai-chat-window" class="hidden fixed bottom-28 left-6 w-80 max-w-[90vw] bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 z-50 flex-col">
+    <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+      <h4 class="text-lg font-bold">Assistente Pomodoro</h4>
+      <button id="close-chat-btn" class="h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    <div id="chat-messages" class="flex-grow p-4 space-y-4 overflow-y-auto h-64 custom-scrollbar">
+      <!-- Mensagens do Chat -->
+    </div>
+    <div class="p-4 border-t border-slate-700">
+      <form id="chat-form" class="flex gap-2">
+        <input type="text" id="chat-input" placeholder="Pergunte algo..." class="flex-grow p-2 border border-slate-600 rounded-lg bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition text-white">
+        <button type="submit" class="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg btn">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Social Links -->
+  <div id="social-links-container" class="fixed bottom-36 right-4 flex flex-col items-center space-y-4">
+    <a href="https://www.instagram.com/henriquebbohrer/" target="_blank" class="social-link">
+      <i class="fa-brands fa-instagram fa-lg"></i>
+    </a>
+    <a href="https://www.linkedin.com/in/henrique-bressiani-bohrer-9457a5207/" target="_blank" class="social-link">
+      <i class="fa-brands fa-linkedin fa-lg"></i>
+    </a>
+    <a href="https://github.com/henrique-bohrer/" target="_blank" class="social-link">
+      <i class="fa-brands fa-github fa-lg"></i>
+    </a>
+  </div>
 </body>
 
 </html>

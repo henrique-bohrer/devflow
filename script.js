@@ -20,11 +20,12 @@ const prevPresetBtn = document.getElementById('prev-preset-btn');
 const nextPresetBtn = document.getElementById('next-preset-btn');
 const localAudioPlayer = document.getElementById('local-audio-player');
 const playerPlayPauseBtn = document.getElementById('player-play-pause-btn');
-const playerPlayIcon = document.getElementById('player-play-icon');
-const playerPauseIcon = document.getElementById('player-pause-icon');
+const playPauseIconContainer = document.getElementById('play-pause-icon-container');
 const playerVolumeSlider = document.getElementById('player-volume-slider');
 const playerCurrentTrackName = document.getElementById('player-current-track-name');
 const volumeTooltip = document.getElementById('volume-tooltip');
+const volumeControlContainer = document.getElementById('volume-control-container');
+const toggleVolumeBtn = document.getElementById('toggle-volume-btn');
 const notificationSound = document.getElementById('notification-sound');
 const breakNotificationSound = document.getElementById('break-notification-sound');
 const warningSound = document.getElementById('warning-sound');
@@ -46,6 +47,22 @@ const showLoginBtn = document.getElementById('show-login-btn');
 const loader = document.getElementById('loader');
 const loaderParagraph = document.getElementById('loader-paragraph');
 const closeTasksBtn = document.getElementById('close-tasks-btn');
+
+// PIX Modal Elements
+const pixDonationBtn = document.getElementById('pix-donation-btn');
+const pixModal = document.getElementById('pix-modal');
+const closePixModalBtn = document.getElementById('close-pix-modal-btn');
+const copyPixKeyBtn = document.getElementById('copy-pix-key-btn');
+const pixKey = document.getElementById('pix-key');
+
+// AI Assistant Elements
+const aiAssistantBtn = document.getElementById('ai-assistant-btn');
+const aiChatWindow = document.getElementById('ai-chat-window');
+const closeChatBtn = document.getElementById('close-chat-btn');
+const chatMessages = document.getElementById('chat-messages');
+const chatForm = document.getElementById('chat-form');
+const chatInput = document.getElementById('chat-input');
+
 
 // Variáveis de Estado
 let timerInterval;
@@ -87,10 +104,10 @@ function updateUIForUser() {
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
     } else {
         userSessionDisplay.innerHTML = `
-            <button id="login-btn-main" class="py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+            <button id="login-btn-main" class="btn py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
                 Fazer Login / Cadastrar
             </button>`;
-        document.getElementById('login-btn-main').addEventListener('click', () => authModal.classList.remove('hidden'));
+        document.getElementById('login-btn-main').addEventListener('click', () => authModal.classList.add('is-open'));
     }
 }
 async function handleLogin(e) {
@@ -104,7 +121,7 @@ async function handleLogin(e) {
         user = data.user;
         updateUIForUser();
         await fetchTasks();
-        authModal.classList.add('hidden');
+        authModal.classList.remove('is-open');
     }
 }
 async function handleRegister(e) {
@@ -193,6 +210,18 @@ async function deleteTask(id) {
         localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
     }
 }
+function createTaskElement(task) {
+    const li = document.createElement('li');
+    li.className = `flex items-center justify-between p-3 rounded-lg transition-colors ${task.done ? 'bg-slate-700/50 text-slate-500 done' : 'bg-slate-700'}`;
+    li.dataset.taskId = task.id;
+    li.innerHTML = `
+        <span class="flex-grow cursor-pointer ${task.done ? 'line-through' : ''}" data-action="toggle" data-id="${task.id}">${task.text}</span>
+        <button data-action="delete" data-id="${task.id}" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
+            <i class="fa-solid fa-times pointer-events-none"></i>
+        </button>`;
+    return li;
+}
+
 function renderTasks() {
     taskList.innerHTML = '';
     if (tasks.length === 0) {
@@ -200,16 +229,43 @@ function renderTasks() {
         return;
     }
     tasks.forEach(task => {
-        const li = document.createElement('li');
-        li.className = `flex items-center justify-between p-3 rounded-lg transition-colors ${task.done ? 'bg-green-500/10 text-slate-500' : 'bg-slate-700'}`;
-        li.innerHTML = `
-            <span class="flex-grow cursor-pointer ${task.done ? 'line-through' : ''}" data-action="toggle" data-id="${task.id}">${task.text}</span>
-            <button data-action="delete" data-id="${task.id}" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
-                <i class="fa-solid fa-times pointer-events-none"></i>
-            </button>`;
+        const li = createTaskElement(task);
         taskList.appendChild(li);
     });
 }
+
+async function addTask(e) {
+    e.preventDefault();
+    const text = taskInput.value.trim();
+    if (!text) return;
+
+    let newTaskId;
+    if (user) {
+        const { data, error } = await _supabase.from('tasks').insert({ text: text, user_id: user.id }).select();
+        if (error) {
+            console.error('Erro ao adicionar tarefa:', error);
+            return;
+        }
+        tasks.push(data[0]);
+        newTaskId = data[0].id;
+    } else {
+        const newTask = { id: Date.now(), text, done: false, created_at: new Date().toISOString() };
+        tasks.push(newTask);
+        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
+        newTaskId = newTask.id;
+    }
+
+    const newTask = tasks.find(t => t.id === newTaskId);
+    const li = createTaskElement(newTask);
+    li.classList.add('slide-in-from-right');
+
+    if (taskList.querySelector('.text-center')) {
+        taskList.innerHTML = '';
+    }
+    taskList.appendChild(li);
+    taskInput.value = '';
+}
+
 async function handleTaskListClick(e) {
     const target = e.target;
     const action = target.dataset.action;
@@ -219,14 +275,100 @@ async function handleTaskListClick(e) {
     const taskIndex = tasks.findIndex(t => t.id === id);
     if (taskIndex === -1) return;
 
+    const li = target.closest('li');
+
     if (action === 'toggle') {
         tasks[taskIndex].done = !tasks[taskIndex].done;
         await updateTaskStatus(id, tasks[taskIndex].done);
+        const newLi = createTaskElement(tasks[taskIndex]);
+        li.replaceWith(newLi);
+        // Adiciona uma classe para uma animação sutil de transição, se desejado
+        newLi.classList.add('task-updated');
+        setTimeout(() => newLi.classList.remove('task-updated'), 300);
+
     } else if (action === 'delete') {
-        tasks.splice(taskIndex, 1);
-        await deleteTask(id);
+        li.classList.add('task-item-deleting');
+        li.addEventListener('animationend', async () => {
+            tasks.splice(taskIndex, 1);
+            await deleteTask(id);
+            li.remove();
+            if (tasks.length === 0) {
+                renderTasks(); // Para mostrar o placeholder
+            }
+        });
     }
-    renderTasks();
+}
+
+// --- LÓGICA DO ASSISTENTE DE IA ---
+function addMessageToChat(sender, message) {
+    const messageElement = document.createElement('div');
+    messageElement.className = `chat-message ${sender}`;
+
+    if (sender === 'ai' && message === 'typing') {
+        messageElement.innerHTML = '<div class="typing-indicator"><span></span></div>';
+        messageElement.id = 'typing-indicator';
+    } else {
+        messageElement.textContent = message;
+    }
+
+    chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+async function callGeminiAPI(prompt) {
+    if (typeof GEMINI_API_KEY === 'undefined' || GEMINI_API_KEY === "SUA_CHAVE_DE_API_AQUI") {
+        return "Por favor, configure sua chave de API no arquivo config.js para usar o assistente.";
+    }
+
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+    const requestBody = {
+        contents: [{
+            parts: [{ "text": prompt }]
+        }]
+    };
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Erro da API Gemini:", errorData);
+            return `Ocorreu um erro ao contatar a IA. Detalhes: ${errorData.error.message}`;
+        }
+
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
+    } catch (error) {
+        console.error("Erro de rede ou fetch:", error);
+        return "Não foi possível conectar à IA. Verifique sua conexão de rede ou a configuração da API.";
+    }
+}
+
+async function handleChatSubmit(e) {
+    e.preventDefault();
+    const userInput = chatInput.value.trim();
+    if (!userInput) return;
+
+    addMessageToChat('user', userInput);
+    chatInput.value = '';
+
+    addMessageToChat('ai', 'typing');
+
+    const aiResponse = await callGeminiAPI(userInput);
+
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+
+    addMessageToChat('ai', aiResponse);
 }
 
 // --- LÓGICA DO POMODORO (Existente) ---
@@ -311,6 +453,7 @@ function setMode(mode, manualReset = false) {
     clearInterval(timerInterval);
     timeLeft = { focus: focusDuration, shortBreak: shortBreakDuration, longBreak: longBreakDuration }[mode];
     timerDisplay.classList.remove('timer-warning');
+    timerDisplay.classList.remove('timer-glowing');
     updateTimerDisplay();
     updateModeDisplay();
     startTimerBtn.classList.remove('hidden');
@@ -338,6 +481,7 @@ function startTimer() {
         toggleMusicPlayer();
     }
     isPaused = false;
+    timerDisplay.classList.add('timer-glowing');
     startTimerBtn.classList.add('hidden');
     pauseTimerBtn.classList.remove('hidden');
     modeButtons.forEach(btn => btn.disabled = true);
@@ -370,6 +514,7 @@ function startTimer() {
 function pauseTimer() {
     isPaused = true;
     clearInterval(timerInterval);
+    timerDisplay.classList.remove('timer-glowing');
     startTimerBtn.classList.remove('hidden');
     pauseTimerBtn.classList.remove('hidden');
     modeButtons.forEach(btn => btn.disabled = true);
@@ -398,7 +543,7 @@ function updateVolumeSlider() {
 // --- INICIALIZAÇÃO ---
 document.addEventListener('DOMContentLoaded', () => {
     // Autenticação
-    closeAuthModalBtn.addEventListener('click', () => authModal.classList.add('hidden'));
+    closeAuthModalBtn.addEventListener('click', () => authModal.classList.remove('is-open'));
     showRegisterBtn.addEventListener('click', showRegisterView);
     showLoginBtn.addEventListener('click', showLoginView);
     loginForm.addEventListener('submit', handleLogin);
@@ -423,17 +568,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Player
     playerPlayPauseBtn.addEventListener('click', toggleMusicPlayer);
     localAudioPlayer.addEventListener('play', () => {
-        playerPlayIcon.classList.add('hidden');
-        playerPauseIcon.classList.remove('hidden');
+        if (playPauseIconContainer) playPauseIconContainer.innerHTML = `<i class="fa-solid fa-pause fa-lg"></i>`;
     });
     localAudioPlayer.addEventListener('pause', () => {
-        playerPlayIcon.classList.remove('hidden');
-        playerPauseIcon.classList.add('hidden');
+        if (playPauseIconContainer) playPauseIconContainer.innerHTML = `<i class="fa-solid fa-play fa-lg"></i>`;
     });
     playerVolumeSlider.addEventListener('input', () => {
         localAudioPlayer.volume = playerVolumeSlider.value / 100;
         updateVolumeSlider();
     });
+
+    if (toggleVolumeBtn) {
+        toggleVolumeBtn.addEventListener('click', () => {
+            volumeControlContainer.classList.toggle('hidden');
+            volumeControlContainer.classList.toggle('flex');
+        });
+    }
 
     // Tarefas
     taskForm.addEventListener('submit', addTask);
@@ -441,8 +591,42 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleTasksBtn.addEventListener('click', () => taskPanel.classList.toggle('is-open'));
     closeTasksBtn.addEventListener('click', () => taskPanel.classList.remove('is-open'));
 
+    // Assistente de IA
+    if (aiAssistantBtn) {
+        aiAssistantBtn.addEventListener('click', () => {
+            aiChatWindow.classList.toggle('hidden');
+        });
+    }
+    if (closeChatBtn) {
+        closeChatBtn.addEventListener('click', () => {
+            aiChatWindow.classList.add('hidden');
+        });
+    }
+    if (chatForm) {
+        chatForm.addEventListener('submit', handleChatSubmit);
+    }
+
     // Inicialização Geral
     document.getElementById('current-year').textContent = new Date().getFullYear();
+
+    // Lógica do Modal PIX
+    if(pixDonationBtn) {
+        pixDonationBtn.addEventListener('click', () => pixModal.classList.add('is-open'));
+    }
+    if(closePixModalBtn) {
+        closePixModalBtn.addEventListener('click', () => pixModal.classList.remove('is-open'));
+    }
+    if(copyPixKeyBtn) {
+        copyPixKeyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(pixKey.textContent).then(() => {
+                copyPixKeyBtn.textContent = 'Copiado!';
+                setTimeout(() => {
+                    copyPixKeyBtn.textContent = 'Copiar Chave';
+                }, 2000);
+            });
+        });
+    }
+
     loadPomodoroSettings();
     updateVolumeSlider();
     setupRadioPlayer();
