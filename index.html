@@ -7,7 +7,11 @@
   <title>DevFlow Pomodoro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Patrick+Hand&display=swap"
+    rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@3.0.5/dist/vanilla-calendar.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/all.min.css">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" href="icone.png">
@@ -91,32 +95,35 @@
     </div>
   </main>
 
-  <button id="toggle-tasks-btn"
+  <button id="toggle-agenda-btn"
     class="btn fixed bottom-24 right-4 h-16 w-16 bg-indigo-600 rounded-full shadow-lg flex items-center justify-center text-white transform hover:scale-110 transition-transform duration-200 z-50">
-    <i class="fa-solid fa-list-check fa-2x"></i>
+    <i class="fa-solid fa-calendar-days fa-2x"></i>
   </button>
 
-  <aside id="task-panel" class="task-panel">
-    <div class="p-6 flex flex-col h-full">
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-2xl font-bold text-slate-100">Tarefas da Sessão</h3>
-        <button id="close-tasks-btn"
-          class="h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors">
-          <i class="fa-solid fa-times"
-            style="background-color: #0d291e; padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: center; border-radius: 50%;"></i>
-        </button>
-      </div>
-      <div id="tasks-content">
-        <form id="task-form" class="flex gap-3 mb-4">
-          <input type="text" id="task-input" placeholder="Adicionar nova tarefa..."
-            class="flex-grow p-3 border border-slate-600 rounded-lg bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition text-white">
-          <button type="submit"
-            class="btn py-3 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200">Add</button>
+  <!-- Agenda Modal -->
+  <div id="agenda-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center hidden">
+    <div class="bg-white w-full max-w-4xl h-[80vh] rounded-lg shadow-2xl p-8 flex flex-col md:flex-row gap-8">
+      <!-- Calendar Column -->
+      <div id="monthly-calendar" class="w-full md:w-1/2"></div>
+
+      <!-- Agenda Column -->
+      <div id="agenda-paper" class="w-full md:w-1/2 h-full flex flex-col">
+        <div class="flex justify-between items-center mb-4">
+          <h3 id="agenda-title" class="text-3xl font-bold text-gray-700" style="font-family: 'Patrick Hand', cursive;">
+            Agenda do Dia</h3>
+          <button id="close-agenda-btn" class="text-gray-500 hover:text-gray-800">
+            <i class="fa-solid fa-times fa-2x"></i>
+          </button>
+        </div>
+        <form id="agenda-form" class="flex-grow flex flex-col">
+          <textarea id="agenda-input" placeholder="Anote suas tarefas e pensamentos..."
+            class="w-full flex-grow bg-transparent text-gray-800 text-xl leading-loose focus:outline-none resize-none p-2"
+            style="font-family: 'Patrick Hand', cursive;"></textarea>
+          <button type="submit" class="hidden">Salvar</button>
         </form>
-        <ul id="task-list" class="flex-grow space-y-2 overflow-y-auto custom-scrollbar pr-2"></ul>
       </div>
     </div>
-  </aside>
+  </div>
 
   <footer id="footer-music-player"
     class="fixed bottom-0 left-0 w-full bg-slate-900/70 backdrop-blur-xl border-t border-slate-800 z-40">
@@ -249,7 +256,7 @@
   </div>
 
   <!-- Social Links -->
-  <div id="social-links-container" class="fixed bottom-44 right-9 flex flex-col items-center space-y-4">
+  <div id="social-links-container" class="fixed bottom-36 right-4 flex flex-col items-center space-y-4">
     <a href="https://www.instagram.com/henriquebbohrer/" target="_blank" class="social-link">
       <i class="fa-brands fa-instagram fa-lg"></i>
     </a>
@@ -261,6 +268,7 @@
     </a>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@3.0.5/dist/vanilla-calendar.min.js" defer></script>
   <script src="config.js"></script>
   <script src="script.js"></script>
 </body>

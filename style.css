@@ -115,12 +115,34 @@ body {
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 10px; }
 
-/* ===== TASK PANEL ===== */
-.task-panel {
-  position: fixed; top: 0; right: 0; width: 100%; max-width: 380px; height: 100%; background-color: var(--bg-main); border-left: 1px solid var(--border-color); box-shadow: -10px 0px 30px rgba(0,0,0,0.2); transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  z-index: 60;
+/* ===== AGENDA MODAL ===== */
+#agenda-modal {
+    display: flex; /* Overwrite hidden to use opacity for transitions */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
 }
-.task-panel.is-open { transform: translateX(0); }
+
+#agenda-modal.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#agenda-paper {
+    background-image:
+        repeating-linear-gradient(to bottom,
+            #E0E0E0 0,
+            #E0E0E0 1px,
+            transparent 1px,
+            transparent 2.5rem); /* Creates the lines */
+    background-size: 100% 2.5rem;
+    line-height: 2.5rem; /* Matches the line-height to the background lines */
+    color: #374151; /* A dark gray for the text */
+}
+
+#agenda-input {
+    line-height: 2.5rem; /* Matches the paper lines */
+}
 
 /* ===== PRESET PICKER ===== */
 .preset-display {
@@ -332,4 +354,45 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
 .typing-indicator span::after {
   content: '.';
   animation: typing-dots 1.4s infinite;
+}
+
+/* ===== VANILLA CALENDAR THEME OVERRIDE ===== */
+.vanilla-calendar {
+    background-color: transparent;
+    border: none;
+    width: 100%;
+}
+
+.vanilla-calendar .vanilla-calendar-header,
+.vanilla-calendar .vanilla-calendar-week {
+    color: var(--text-secondary);
+}
+
+.vanilla-calendar .vanilla-calendar-day__btn {
+    background-color: transparent;
+    color: var(--text-primary);
+}
+
+.vanilla-calendar .vanilla-calendar-day__btn:hover {
+    background-color: rgba(255, 248, 211, 0.1);
+}
+
+.vanilla-calendar .vanilla-calendar-day__btn_today {
+    background-color: var(--accent-primary);
+    color: var(--text-primary);
+    border-radius: 4px;
+}
+
+.vanilla-calendar .vanilla-calendar-day__btn_selected {
+    background-color: var(--accent-secondary);
+    color: var(--text-primary);
+    border-radius: 4px;
+}
+
+.vanilla-calendar .vanilla-calendar-arrow {
+    background-color: rgba(255, 248, 211, 0.1);
+    border-radius: 4px;
+}
+.vanilla-calendar .vanilla-calendar-arrow:hover {
+    background-color: rgba(255, 248, 211, 0.2);
 }

@@ -29,12 +29,6 @@ const toggleVolumeBtn = document.getElementById('toggle-volume-btn');
 const notificationSound = document.getElementById('notification-sound');
 const breakNotificationSound = document.getElementById('break-notification-sound');
 const warningSound = document.getElementById('warning-sound');
-const taskPanel = document.getElementById('task-panel');
-const toggleTasksBtn = document.getElementById('toggle-tasks-btn');
-const taskForm = document.getElementById('task-form');
-const taskInput = document.getElementById('task-input');
-const taskList = document.getElementById('task-list');
-const tasksContent = document.getElementById('tasks-content');
 const userSessionDisplay = document.getElementById('user-session-display');
 const authModal = document.getElementById('auth-modal');
 const closeAuthModalBtn = document.getElementById('close-auth-modal-btn');
@@ -46,7 +40,12 @@ const showRegisterBtn = document.getElementById('show-register-btn');
 const showLoginBtn = document.getElementById('show-login-btn');
 const loader = document.getElementById('loader');
 const loaderParagraph = document.getElementById('loader-paragraph');
-const closeTasksBtn = document.getElementById('close-tasks-btn');
+
+// Agenda Elements
+const toggleAgendaBtn = document.getElementById('toggle-agenda-btn');
+const agendaModal = document.getElementById('agenda-modal');
+const closeAgendaBtn = document.getElementById('close-agenda-btn');
+const agendaInput = document.getElementById('agenda-input');
 
 // PIX Modal Elements
 const pixDonationBtn = document.getElementById('pix-donation-btn');
@@ -83,16 +82,12 @@ const presetKeys = Object.keys(pomodoroPresets);
 let currentPresetIndex = 0;
 let focusDuration, shortBreakDuration, longBreakDuration, cyclesBeforeLongBreak;
 
-// --- LÓGICA DE AUTENTICAÇÃO E TAREFAS (SUPABASE) ---
+// --- LÓGICA DE AUTENTICAÇÃO E AGENDA ---
 async function checkUser() {
     const { data: { session } } = await _supabase.auth.getSession();
     user = session?.user;
     updateUIForUser();
-    if (user) {
-        await fetchTasks();
-    } else {
-        loadTasksFromLocalStorage();
-    }
+    // A lógica da agenda agora é puramente local, mas esta estrutura pode ser usada no futuro
 }
 function updateUIForUser() {
     if (user) {
@@ -154,159 +149,88 @@ async function handleLogout() {
     loadTasksFromLocalStorage();
 }
 function showLoginView() {
-    loginView.classList.remove('hidden');
-    registerView.classList.add('hidden');
+    if (loginView && registerView) {
+        loginView.classList.remove('hidden');
+        registerView.classList.add('hidden');
+    }
 }
 function showRegisterView() {
-    loginView.classList.add('hidden');
-    registerView.classList.remove('hidden');
-}
-function loadTasksFromLocalStorage() {
-    const localTasks = localStorage.getItem('pomodoroTasks');
-    tasks = localTasks ? JSON.parse(localTasks) : [];
-    renderTasks();
-}
-async function fetchTasks() {
-    if (!user) return;
-    try {
-        const { data, error } = await _supabase.from('tasks').select('*').order('created_at');
-        if (error) throw error;
-        tasks = data;
-        renderTasks();
-    } catch (error) {
-        console.error("Erro ao buscar tarefas:", error);
+    if (loginView && registerView) {
+        loginView.classList.add('hidden');
+        registerView.classList.remove('hidden');
     }
 }
-async function addTask(e) {
-    e.preventDefault();
-    const text = taskInput.value.trim();
-    if (!text) return;
 
-    if (user) {
-        const { data, error } = await _supabase.from('tasks').insert({ text: text, user_id: user.id }).select();
-        if (error) {
-            console.error('Erro ao adicionar tarefa:', error);
-        } else {
-            tasks.push(data[0]);
+// --- LÓGICA DA AGENDA ---
+let agendaSaveTimeout;
+let selectedDate = new Date();
+let calendarInstance = null;
+
+function getFormattedDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function loadAgendaContent(date) {
+    const formattedDate = getFormattedDate(date);
+    const savedContent = localStorage.getItem(`pomodoroAgenda-${formattedDate}`);
+    if (agendaInput) {
+        agendaInput.value = savedContent || '';
+    }
+    const agendaTitle = document.getElementById('agenda-title');
+    if (agendaTitle) {
+        agendaTitle.textContent = `Agenda de ${date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}`;
+    }
+}
+
+function saveAgendaContent() {
+    if (agendaInput) {
+        const formattedDate = getFormattedDate(selectedDate);
+        localStorage.setItem(`pomodoroAgenda-${formattedDate}`, agendaInput.value);
+    }
+}
+
+function handleAgendaInput() {
+    clearTimeout(agendaSaveTimeout);
+    agendaSaveTimeout = setTimeout(saveAgendaContent, 500); // Auto-save 500ms after user stops typing
+}
+
+function initializeAgendaCalendar() {
+    if (calendarInstance || !document.getElementById('monthly-calendar')) return;
+
+    const checkInterval = setInterval(() => {
+        if (window.VanillaCalendarPro && window.VanillaCalendarPro.Calendar) {
+            clearInterval(checkInterval);
+
+            const { Calendar } = window.VanillaCalendarPro;
+            calendarInstance = new Calendar('#monthly-calendar', {
+                actions: {
+                    clickDay(event, self) {
+                        if (!self.selectedDates[0]) return;
+                        selectedDate = new Date(self.selectedDates[0]);
+                        loadAgendaContent(selectedDate);
+                    },
+                },
+                settings: {
+                    lang: 'pt-BR',
+                    visibility: {
+                        theme: 'light', // We will override this with CSS
+                    },
+                    selection: {
+                        day: 'single', // Allow only one day to be selected
+                    },
+                },
+            });
+            calendarInstance.init();
         }
-    } else {
-        const newTask = { id: Date.now(), text, done: false, created_at: new Date().toISOString() };
-        tasks.push(newTask);
-        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
-    }
-    taskInput.value = '';
-    renderTasks();
-}
-async function updateTaskStatus(id, done) {
-    if (user) {
-        await _supabase.from('tasks').update({ done }).eq('id', id);
-    } else {
-        const taskIndex = tasks.findIndex(t => t.id === id);
-        if (taskIndex > -1) {
-            tasks[taskIndex].done = done;
-            localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
-        }
-    }
-}
-async function deleteTask(id) {
-    if (user) {
-        await _supabase.from('tasks').delete().eq('id', id);
-    } else {
-        tasks = tasks.filter(t => t.id !== id);
-        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
-    }
-}
-function createTaskElement(task) {
-    const li = document.createElement('li');
-    li.className = `flex items-center justify-between p-3 rounded-lg transition-colors ${task.done ? 'bg-slate-700/50 text-slate-500 done' : 'bg-slate-700'}`;
-    li.dataset.taskId = task.id;
-    li.innerHTML = `
-        <span class="flex-grow cursor-pointer ${task.done ? 'line-through' : ''}" data-action="toggle" data-id="${task.id}">${task.text}</span>
-        <button data-action="delete" data-id="${task.id}" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
-            <i class="fa-solid fa-times pointer-events-none"></i>
-        </button>`;
-    return li;
-}
-
-function renderTasks() {
-    taskList.innerHTML = '';
-    if (tasks.length === 0) {
-        taskList.innerHTML = `<li class="text-center text-slate-400 p-2">Nenhuma tarefa adicionada.</li>`;
-        return;
-    }
-    tasks.forEach(task => {
-        const li = createTaskElement(task);
-        taskList.appendChild(li);
-    });
-}
-
-async function addTask(e) {
-    e.preventDefault();
-    const text = taskInput.value.trim();
-    if (!text) return;
-
-    let newTaskId;
-    if (user) {
-        const { data, error } = await _supabase.from('tasks').insert({ text: text, user_id: user.id }).select();
-        if (error) {
-            console.error('Erro ao adicionar tarefa:', error);
-            return;
-        }
-        tasks.push(data[0]);
-        newTaskId = data[0].id;
-    } else {
-        const newTask = { id: Date.now(), text, done: false, created_at: new Date().toISOString() };
-        tasks.push(newTask);
-        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
-        newTaskId = newTask.id;
-    }
-
-    const newTask = tasks.find(t => t.id === newTaskId);
-    const li = createTaskElement(newTask);
-    li.classList.add('slide-in-from-right');
-
-    if (taskList.querySelector('.text-center')) {
-        taskList.innerHTML = '';
-    }
-    taskList.appendChild(li);
-    taskInput.value = '';
-}
-
-async function handleTaskListClick(e) {
-    const target = e.target;
-    const action = target.dataset.action;
-    const id = parseInt(target.dataset.id, 10);
-    if (!action || isNaN(id)) return;
-
-    const taskIndex = tasks.findIndex(t => t.id === id);
-    if (taskIndex === -1) return;
-
-    const li = target.closest('li');
-
-    if (action === 'toggle') {
-        tasks[taskIndex].done = !tasks[taskIndex].done;
-        await updateTaskStatus(id, tasks[taskIndex].done);
-        const newLi = createTaskElement(tasks[taskIndex]);
-        li.replaceWith(newLi);
-        // Adiciona uma classe para uma animação sutil de transição, se desejado
-        newLi.classList.add('task-updated');
-        setTimeout(() => newLi.classList.remove('task-updated'), 300);
-
-    } else if (action === 'delete') {
-        li.classList.add('task-item-deleting');
-        li.addEventListener('animationend', async () => {
-            tasks.splice(taskIndex, 1);
-            await deleteTask(id);
-            li.remove();
-            if (tasks.length === 0) {
-                renderTasks(); // Para mostrar o placeholder
-            }
-        });
-    }
+    }, 100); // Check every 100ms
 }
 
 // --- LÓGICA DO ASSISTENTE DE IA ---
 function addMessageToChat(sender, message) {
+    if (!chatMessages) return;
     const messageElement = document.createElement('div');
     messageElement.className = `chat-message ${sender}`;
 
@@ -595,11 +519,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Tarefas
-    if (taskForm) taskForm.addEventListener('submit', addTask);
-    if (taskList) taskList.addEventListener('click', handleTaskListClick);
-    if (toggleTasksBtn && taskPanel) toggleTasksBtn.addEventListener('click', () => taskPanel.classList.toggle('is-open'));
-    if (closeTasksBtn && taskPanel) closeTasksBtn.addEventListener('click', () => taskPanel.classList.remove('is-open'));
+    // Agenda
+    if (toggleAgendaBtn && agendaModal) {
+        toggleAgendaBtn.addEventListener('click', () => {
+            agendaModal.classList.add('is-open');
+            // Delay initialization to allow for CSS transition
+            setTimeout(initializeAgendaCalendar, 500);
+        });
+    }
+    if (closeAgendaBtn && agendaModal) {
+        closeAgendaBtn.addEventListener('click', () => {
+            agendaModal.classList.remove('is-open');
+        });
+    }
+    if (agendaInput) {
+        agendaInput.addEventListener('input', handleAgendaInput);
+    }
 
     // Assistente de IA
     if (aiAssistantBtn && aiChatWindow) {
@@ -637,6 +572,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicialização Geral
     const currentYearEl = document.getElementById('current-year');
     if (currentYearEl) currentYearEl.textContent = new Date().getFullYear();
+
+    // Inicialização Geral
+    loadAgendaContent(selectedDate); // Load today's content initially
     loadPomodoroSettings();
     updateVolumeSlider();
     setupRadioPlayer();
