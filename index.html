@@ -104,7 +104,13 @@
   <div id="agenda-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center hidden">
     <div class="bg-white w-full max-w-4xl h-[80vh] rounded-lg shadow-2xl p-8 flex flex-col md:flex-row gap-8">
       <!-- Calendar Column -->
-      <div id="monthly-calendar" class="w-full md:w-1/2"></div>
+      <div class="w-full md:w-1/2 flex flex-col">
+        <div class="flex items-center justify-center gap-2 mb-4">
+          <button id="view-month-btn" class="agenda-view-btn active">Mês</button>
+          <button id="view-year-btn" class="agenda-view-btn">Ano</button>
+        </div>
+        <div id="monthly-calendar" class="flex-grow"></div>
+      </div>
 
       <!-- Agenda Column -->
       <div id="agenda-paper" class="w-full md:w-1/2 h-full flex flex-col">
@@ -116,9 +122,9 @@
           </button>
         </div>
         <form id="agenda-form" class="flex-grow flex flex-col">
-          <textarea id="agenda-input" placeholder="Anote suas tarefas e pensamentos..."
-            class="w-full flex-grow bg-transparent text-gray-800 text-xl leading-loose focus:outline-none resize-none p-2"
-            style="font-family: 'Patrick Hand', cursive;"></textarea>
+          <div id="agenda-input"
+            class="w-full flex-grow bg-transparent text-gray-800 text-xl leading-loose focus:outline-none resize-none p-2 overflow-y-auto"
+            style="font-family: 'Patrick Hand', cursive;"></div>
           <button type="submit" class="hidden">Salvar</button>
         </form>
       </div>
@@ -256,7 +262,7 @@
   </div>
 
   <!-- Social Links -->
-  <div id="social-links-container" class="fixed bottom-36 right-4 flex flex-col items-center space-y-4">
+  <div id="social-links-container" class="fixed bottom-44 right-9 flex flex-col items-center space-y-4">
     <a href="https://www.instagram.com/henriquebbohrer/" target="_blank" class="social-link">
       <i class="fa-brands fa-instagram fa-lg"></i>
     </a>

@@ -135,7 +135,7 @@ body {
             #E0E0E0 1px,
             transparent 1px,
             transparent 2.5rem); /* Creates the lines */
-    background-size: 100% 2.5rem;
+    background-size: 100% 2rem;
     line-height: 2.5rem; /* Matches the line-height to the background lines */
     color: #374151; /* A dark gray for the text */
 }
@@ -285,6 +285,10 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
   text-decoration-color: var(--text-secondary);
 }
 
+.task-item {
+
+}
+
 @keyframes subtleFadeIn {
   from { opacity: 0.7; }
   to { opacity: 1; }
@@ -395,4 +399,78 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
 }
 .vanilla-calendar .vanilla-calendar-arrow:hover {
     background-color: rgba(255, 248, 211, 0.2);
+}
+
+/* ===== CUSTOM CALENDAR NAVIGATION ===== */
+.vc-header-nav {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.vc-header-nav .vc-arrow-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+    flex-grow: 1;
+}
+
+.vc-header-nav .vc-arrow-btn:hover {
+    color: var(--text-primary);
+    transform: scale(1.1);
+}
+
+.vc-header-nav .vc-header__content {
+    color: var(--text-primary);
+    font-weight: 600;
+    flex-grow: 2;
+    text-align: center;
+}
+
+/* ===== AGENDA VIEW SWITCHER ===== */
+.agenda-view-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    background-color: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.agenda-view-btn:hover {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.agenda-view-btn.active {
+    background-color: var(--accent-primary);
+    color: var(--text-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(216, 55, 33, 0.2);
+}
+
+/* ===== CALENDAR TRANSITION ===== */
+@keyframes calendarReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+#monthly-calendar.is-updating {
+  animation: calendarReveal 0.3s ease-out forwards;
 }
