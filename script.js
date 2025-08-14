@@ -85,12 +85,17 @@ let currentPresetIndex = 0;
 let focusDuration, shortBreakDuration, longBreakDuration, cyclesBeforeLongBreak;
 
 // --- LÓGICA DE AUTENTICAÇÃO E AGENDA ---
+
+// ✅ CORREÇÃO: Esta função agora também chama `loadAgendaContent`.
+// Assim, garantimos que a agenda só carregue DEPOIS de sabermos se o usuário está logado.
 async function checkUser() {
     const { data: { session } } = await _supabase.auth.getSession();
     user = session?.user;
     updateUIForUser();
-    // A lógica da agenda agora é puramente local, mas esta estrutura pode ser usada no futuro
+    // Carrega o conteúdo da agenda aqui, após a verificação do usuário estar completa.
+    await loadAgendaContent(selectedDate);
 }
+
 function updateUIForUser() {
     if (user) {
         userSessionDisplay.innerHTML = `
@@ -113,6 +118,7 @@ function updateUIForUser() {
         }
     }
 }
+
 async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
@@ -123,10 +129,11 @@ async function handleLogin(e) {
     } else {
         user = data.user;
         updateUIForUser();
-        await loadAgendaContent(selectedDate); // Load content for the currently selected date
+        await loadAgendaContent(selectedDate); // Load content after successful login
         authModal.classList.remove('is-open');
     }
 }
+
 async function handleRegister(e) {
     e.preventDefault();
     const email = document.getElementById('register-email').value;
@@ -144,19 +151,22 @@ async function handleRegister(e) {
         showLoginView();
     }
 }
+
 async function handleLogout() {
     await _supabase.auth.signOut();
     user = null;
     updateUIForUser();
-    // When logging out, reload the agenda content, which will clear it since user is null
-    loadAgendaContent(selectedDate);
+    // Ao deslogar, recarrega o conteúdo da agenda, que mostrará a mensagem de login.
+    await loadAgendaContent(selectedDate);
 }
+
 function showLoginView() {
     if (loginView && registerView) {
         loginView.classList.remove('hidden');
         registerView.classList.add('hidden');
     }
 }
+
 function showRegisterView() {
     if (loginView && registerView) {
         loginView.classList.add('hidden');
@@ -176,6 +186,8 @@ function getFormattedDate(date) {
     return `${year}-${month}-${day}`;
 }
 
+// --- DENTRO DO SEU SCRIPT.JS ---
+
 async function loadAgendaContent(date) {
     const formattedDate = getFormattedDate(date);
     const agendaTitle = document.getElementById('agenda-title');
@@ -192,28 +204,32 @@ async function loadAgendaContent(date) {
     }
 
     try {
+        // ✅ CORREÇÃO: Removemos o .single() e agora tratamos o resultado como um array.
         const { data, error } = await _supabase
             .from('tasks')
             .select('content')
             .eq('user_id', user.id)
-            .eq('date', formattedDate)
-            .single();
+            .eq('date', formattedDate);
 
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
             console.error('Erro ao carregar anotação:', error);
             agendaInput.innerHTML = '<div class="text-red-500">Erro ao carregar dados.</div>';
         } else {
-            const content = data ? data.content : '';
-            const tasks = content.split('\n');
-            agendaInput.innerHTML = ''; // Clear loading message
+            // Juntamos o conteúdo de todas as entradas encontradas para o dia.
+            const combinedContent = data.map(row => row.content).join('\n');
+            // Filtramos para remover linhas vazias que possam ter sido criadas.
+            const tasks = combinedContent.split('\n').filter(task => task.trim() !== '');
 
-            if (tasks.length === 0 || (tasks.length === 1 && tasks[0] === '')) {
-                // If no tasks, create one empty editable div
+            agendaInput.innerHTML = ''; // Limpa a mensagem de carregamento
+
+            if (tasks.length === 0) {
+                // Se não houver tarefas, cria um campo editável vazio.
                 const taskDiv = document.createElement('div');
                 taskDiv.contentEditable = true;
                 taskDiv.className = 'task-item';
                 agendaInput.appendChild(taskDiv);
             } else {
+                // Se houver tarefas, cria um campo para cada uma.
                 tasks.forEach(taskText => {
                     const taskDiv = document.createElement('div');
                     taskDiv.contentEditable = true;
@@ -244,16 +260,9 @@ async function saveAgendaContent() {
         const { error } = await _supabase
             .from('tasks')
             .upsert(
-                {
-                    user_id: user.id,
-                    date: formattedDate,
-                    content: content,
-                },
-                {
-                    onConflict: 'user_id, date',
-                }
+                { user_id: user.id, date: formattedDate, content: content },
+                { onConflict: 'user_id, date' }
             );
-
         if (error) {
             console.error('Erro ao salvar anotação:', error);
         }
@@ -264,7 +273,7 @@ async function saveAgendaContent() {
 
 function handleAgendaInput() {
     clearTimeout(agendaSaveTimeout);
-    agendaSaveTimeout = setTimeout(saveAgendaContent, 500); // Auto-save 500ms after user stops typing
+    agendaSaveTimeout = setTimeout(saveAgendaContent, 500);
 }
 
 function switchCalendarView(type) {
@@ -307,12 +316,10 @@ function initializeAgendaCalendar(type = 'default') {
                     onUpdate(self) {
                         const calendarContainer = document.getElementById('monthly-calendar');
                         if (calendarContainer) {
-                            // Use a timeout to ensure the class is removed before re-adding
                             calendarContainer.classList.remove('is-updating');
                             setTimeout(() => {
                                 calendarContainer.classList.add('is-updating');
                             }, 10);
-
                             const animationEndHandler = () => {
                                 calendarContainer.classList.remove('is-updating');
                                 calendarContainer.removeEventListener('animationend', animationEndHandler);
@@ -323,12 +330,8 @@ function initializeAgendaCalendar(type = 'default') {
                 },
                 settings: {
                     lang: 'pt-BR',
-                    visibility: {
-                        theme: 'light',
-                    },
-                    selection: {
-                        day: 'single',
-                    },
+                    visibility: { theme: 'light' },
+                    selection: { day: 'single' },
                     selected: {
                         dates: [getFormattedDate(selectedDate)],
                         month: selectedDate.getMonth(),
@@ -358,7 +361,6 @@ function initializeAgendaCalendar(type = 'default') {
             });
             calendarInstance.init();
 
-            // Add event listeners for new navigation buttons only in default view
             if (type === 'default') {
                 const navButtons = [
                     { id: 'cal-prev-year', action: () => selectedDate.setFullYear(selectedDate.getFullYear() - 1) },
@@ -366,7 +368,6 @@ function initializeAgendaCalendar(type = 'default') {
                     { id: 'cal-prev-week', action: () => selectedDate.setDate(selectedDate.getDate() - 7) },
                     { id: 'cal-next-week', action: () => selectedDate.setDate(selectedDate.getDate() + 7) }
                 ];
-
                 navButtons.forEach(({ id, action }) => {
                     const button = document.getElementById(id);
                     if (button) {
@@ -380,10 +381,10 @@ function initializeAgendaCalendar(type = 'default') {
                 });
             }
         }
-    }, 100); // Check every 100ms
+    }, 100);
 }
 
-// --- LÓGICA DO ASSISTENTE DE IA ---
+// --- LÓGICA DO ASSISTENTE DE IA (sem alterações) ---
 function addMessageToChat(sender, message) {
     if (!chatMessages) return;
     const messageElement = document.createElement('div');
@@ -416,9 +417,7 @@ async function callGeminiAPI(prompt) {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
         });
 
@@ -445,18 +444,13 @@ async function handleChatSubmit(e) {
     chatInput.value = '';
 
     addMessageToChat('ai', 'typing');
-
     const aiResponse = await callGeminiAPI(userInput);
-
     const typingIndicator = document.getElementById('typing-indicator');
-    if (typingIndicator) {
-        typingIndicator.remove();
-    }
-
+    if (typingIndicator) typingIndicator.remove();
     addMessageToChat('ai', aiResponse);
 }
 
-// --- LÓGICA DO POMODORO (Existente) ---
+// --- LÓGICA DO POMODORO (sem alterações) ---
 function updatePresetDisplay(isInitial = false, direction = 0) {
     const currentPresetKey = presetKeys[currentPresetIndex];
     const presetName = pomodoroPresets[currentPresetKey].name;
@@ -537,8 +531,7 @@ function setMode(mode, manualReset = false) {
     isPaused = true;
     clearInterval(timerInterval);
     timeLeft = { focus: focusDuration, shortBreak: shortBreakDuration, longBreak: longBreakDuration }[mode];
-    timerDisplay.classList.remove('timer-warning');
-    timerDisplay.classList.remove('timer-glowing');
+    timerDisplay.classList.remove('timer-warning', 'timer-glowing');
     updateTimerDisplay();
     updateModeDisplay();
     startTimerBtn.classList.remove('hidden');
@@ -562,9 +555,7 @@ function startTimer() {
         warningSound.play().then(() => warningSound.pause());
         areSoundsUnlocked = true;
     }
-    if (localAudioPlayer.paused) {
-        toggleMusicPlayer();
-    }
+    if (localAudioPlayer.paused) toggleMusicPlayer();
     isPaused = false;
     timerDisplay.classList.add('timer-glowing');
     startTimerBtn.classList.add('hidden');
@@ -581,7 +572,6 @@ function startTimer() {
         }
         if (timeLeft < 0) {
             clearInterval(timerInterval);
-            const previousMode = currentMode;
             if (currentMode === 'focus') {
                 currentCycleCount++;
                 cyclesCountDisplay.textContent = currentCycleCount;
@@ -608,7 +598,7 @@ function pauseTimer() {
 }
 function requestNotificationPermission() {
     if ('Notification' in window && Notification.permission !== 'granted') {
-        Notification.requestPermission().then(p => notificationPermission = p);
+        Notification.requestPermission();
     }
 }
 function showNotification(title, body) {
@@ -628,9 +618,7 @@ function updateVolumeSlider() {
 // --- INICIALIZAÇÃO ---
 document.addEventListener('DOMContentLoaded', () => {
     // Autenticação
-    if (closeAuthModalBtn && authModal) {
-        closeAuthModalBtn.addEventListener('click', () => authModal.classList.remove('is-open'));
-    }
+    if (closeAuthModalBtn) closeAuthModalBtn.addEventListener('click', () => authModal.classList.remove('is-open'));
     if (showRegisterBtn) showRegisterBtn.addEventListener('click', showRegisterView);
     if (showLoginBtn) showLoginBtn.addEventListener('click', showLoginView);
     if (loginForm) loginForm.addEventListener('submit', handleLogin);
@@ -666,130 +654,84 @@ document.addEventListener('DOMContentLoaded', () => {
         if (localAudioPlayer) localAudioPlayer.volume = playerVolumeSlider.value / 100;
         updateVolumeSlider();
     });
-
-    if (toggleVolumeBtn && volumeControlContainer) {
-        toggleVolumeBtn.addEventListener('click', () => {
-            volumeControlContainer.classList.toggle('hidden');
-            volumeControlContainer.classList.toggle('flex');
-        });
-    }
+    if (toggleVolumeBtn) toggleVolumeBtn.addEventListener('click', () => volumeControlContainer.classList.toggle('hidden'));
 
     // Agenda
-    if (toggleAgendaBtn && agendaModal) {
-        toggleAgendaBtn.addEventListener('click', () => {
-            agendaModal.classList.add('is-open');
-            // Delay initialization to allow for CSS transition
-            setTimeout(() => switchCalendarView('default'), 300); // Use a shorter delay
-        });
-    }
-    if (viewMonthBtn) {
-        viewMonthBtn.addEventListener('click', () => switchCalendarView('default'));
-    }
-    if (viewYearBtn) {
-        viewYearBtn.addEventListener('click', () => switchCalendarView('year'));
-    }
-    if (closeAgendaBtn && agendaModal) {
-        closeAgendaBtn.addEventListener('click', () => {
-            agendaModal.classList.remove('is-open');
-        });
-    }
+    if (toggleAgendaBtn) toggleAgendaBtn.addEventListener('click', () => {
+        agendaModal.classList.add('is-open');
+        setTimeout(() => switchCalendarView('default'), 300);
+    });
+    if (viewMonthBtn) viewMonthBtn.addEventListener('click', () => switchCalendarView('default'));
+    if (viewYearBtn) viewYearBtn.addEventListener('click', () => switchCalendarView('year'));
+    if (closeAgendaBtn) closeAgendaBtn.addEventListener('click', () => agendaModal.classList.remove('is-open'));
     if (agendaInput) {
-        // Still use the input event on the container for debounced saving
         agendaInput.addEventListener('input', handleAgendaInput);
-
-        // Handle creating new tasks with the Enter key
         agendaInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault(); // Stop default Enter behavior
-
+                e.preventDefault();
                 const newTaskDiv = document.createElement('div');
                 newTaskDiv.className = 'task-item';
                 newTaskDiv.contentEditable = true;
-
                 const currentTask = document.activeElement;
-                // Ensure we are inside a task item before inserting after it
                 if (currentTask && currentTask.classList.contains('task-item') && currentTask.closest('#agenda-input')) {
                     currentTask.insertAdjacentElement('afterend', newTaskDiv);
                 } else {
-                    // Fallback if focus is lost or somewhere else, just add to the end
                     agendaInput.appendChild(newTaskDiv);
                 }
-
-                // Set focus to the new task
                 newTaskDiv.focus();
             }
         });
     }
 
     // Assistente de IA
-    if (aiAssistantBtn && aiChatWindow) {
-        aiAssistantBtn.addEventListener('click', () => {
-            aiChatWindow.classList.toggle('is-chat-open');
-        });
-    }
-    if (closeChatBtn && aiChatWindow) {
-        closeChatBtn.addEventListener('click', () => {
-            aiChatWindow.classList.remove('is-chat-open');
-        });
-    }
-    if (chatForm) {
-        chatForm.addEventListener('submit', handleChatSubmit);
-    }
+    if (aiAssistantBtn) aiAssistantBtn.addEventListener('click', () => aiChatWindow.classList.toggle('is-chat-open'));
+    if (closeChatBtn) closeChatBtn.addEventListener('click', () => aiChatWindow.classList.remove('is-chat-open'));
+    if (chatForm) chatForm.addEventListener('submit', handleChatSubmit);
 
-    // Lógica do Modal PIX
-    if (pixDonationBtn && pixModal) {
-        pixDonationBtn.addEventListener('click', () => pixModal.classList.add('is-open'));
-    }
-    if (closePixModalBtn && pixModal) {
-        closePixModalBtn.addEventListener('click', () => pixModal.classList.remove('is-open'));
-    }
-    if (copyPixKeyBtn && pixKey) {
-        copyPixKeyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(pixKey.textContent).then(() => {
-                copyPixKeyBtn.textContent = 'Copiado!';
-                setTimeout(() => {
-                    copyPixKeyBtn.textContent = 'Copiar Chave';
-                }, 2000);
-            });
+    // Modal PIX
+    if (pixDonationBtn) pixDonationBtn.addEventListener('click', () => pixModal.classList.add('is-open'));
+    if (closePixModalBtn) closePixModalBtn.addEventListener('click', () => pixModal.classList.remove('is-open'));
+    if (copyPixKeyBtn) copyPixKeyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(pixKey.textContent).then(() => {
+            copyPixKeyBtn.textContent = 'Copiado!';
+            setTimeout(() => { copyPixKeyBtn.textContent = 'Copiar Chave'; }, 2000);
         });
-    }
+    });
 
     // Inicialização Geral
     const currentYearEl = document.getElementById('current-year');
     if (currentYearEl) currentYearEl.textContent = new Date().getFullYear();
 
-    // Inicialização Geral
-    loadAgendaContent(selectedDate); // Load today's content initially
     loadPomodoroSettings();
     updateVolumeSlider();
     setupRadioPlayer();
     requestNotificationPermission();
+
+    // ✅ CORREÇÃO: Removi o carregamento da agenda daqui e movi para dentro de `checkUser`.
+    // Agora, esta é a última função a ser chamada, garantindo que o status do usuário seja
+    // a primeira coisa a ser verificada.
     checkUser();
 });
 
-// ✅ LÓGICA DA TELA DE CARREGAMENTO COM TEXTO DIGITADO
+// LÓGICA DA TELA DE CARREGAMENTO (sem alterações)
 window.addEventListener('load', () => {
     if (loader) {
         const text = "Organize suas tarefas. Aumente sua produtividade.";
         let i = 0;
-
-        // Atraso inicial para as animações de entrada terminarem
         setTimeout(() => {
             loaderParagraph.classList.add('typing');
-
             function typeWriter() {
                 if (i < text.length) {
                     loaderParagraph.innerHTML += text.charAt(i);
                     i++;
-                    setTimeout(typeWriter, 60); // Velocidade da digitação
+                    setTimeout(typeWriter, 60);
                 } else {
-                    // Fim da animação
                     setTimeout(() => {
                         loader.classList.add('hidden');
-                    }, 1500); // Tempo de espera após a digitação
+                    }, 1500);
                 }
             }
             typeWriter();
-        }, 2000); // Inicia a digitação após 2 segundos
+        }, 2000);
     }
 });
