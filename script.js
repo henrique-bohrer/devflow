@@ -223,18 +223,26 @@ function renderUpcomingEvents() {
         eventEl.innerHTML = `
             <div class="flex justify-between items-center">
                 <span class="font-bold text-gray-700 truncate">${event.title}</span>
-                <button data-edit-id="${event.id}" class="edit-event-btn text-gray-400 hover:text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center">
-                    <i class="fa-solid fa-pencil"></i>
-                </button>
+                <div class="flex items-center">
+                    <button title="Editar evento" data-edit-id="${event.id}" class="edit-event-btn text-gray-400 hover:text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-pencil"></i>
+                    </button>
+                    <button title="Excluir evento" data-delete-id="${event.id}" class="delete-event-btn text-gray-400 hover:text-red-500 w-8 h-8 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
             </div>
             <p class="text-sm text-indigo-500 font-semibold">${countdown}</p>`;
 
         upcomingEventsList.appendChild(eventEl);
 
         eventEl.addEventListener('click', (e) => {
-            if (!e.target.closest('.edit-event-btn')) displayEventDetails(event.id);
+            if (!e.target.closest('.edit-event-btn') && !e.target.closest('.delete-event-btn')) {
+                displayEventDetails(event.id);
+            }
         });
         eventEl.querySelector('.edit-event-btn').addEventListener('click', () => openEventEditor(event.id));
+        eventEl.querySelector('.delete-event-btn').addEventListener('click', () => handleDeleteEvent(event.id));
     });
 }
 
@@ -300,6 +308,41 @@ async function handleDirectSave() {
     } finally {
         saveAgendaBtn.disabled = false;
         saveAgendaBtn.textContent = 'Salvar';
+    }
+}
+
+async function handleDeleteEvent(eventId) {
+    if (!eventId) return;
+
+    const eventToDelete = eventsCache.find(e => e.id == eventId);
+    if (!eventToDelete) return;
+
+    const confirmation = confirm(`Tem certeza que deseja excluir o evento "${eventToDelete.title}"?\nEsta ação não pode ser desfeita.`);
+
+    if (confirmation) {
+        try {
+            const { error } = await _supabase
+                .from('events')
+                .delete()
+                .eq('id', eventId);
+
+            if (error) throw error;
+
+            // Remove from cache
+            eventsCache = eventsCache.filter(e => e.id != eventId);
+
+            // Check if the deleted event was the one being displayed
+            if (agendaInput.dataset.currentEventId == eventId) {
+                resetAgendaDetails();
+            }
+
+            // Re-render the list
+            renderUpcomingEvents();
+
+        } catch (err) {
+            console.error("Erro ao excluir evento:", err);
+            alert("Não foi possível excluir o evento.");
+        }
     }
 }
 

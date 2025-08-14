@@ -182,6 +182,10 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.delete-event-btn:hover {
+    color: var(--warning-color) !important;
+}
+
 /* ===== CUSTOM PLAYER SLIDER ===== */
 input[type="range"].player-slider {
   -webkit-appearance: none; appearance: none; width: 100%; height: 6px; background: var(--border-color); border-radius: 5px; outline: none; transition: background 0.1s ease;
