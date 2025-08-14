@@ -192,6 +192,17 @@ input[type="range"].player-slider::-webkit-slider-thumb {
 input[type="range"].player-slider::-moz-range-track { width: 100%; height: 6px; cursor: pointer; background: var(--border-color); border-radius: 5px; }
 input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px; background: var(--accent-primary); cursor: pointer; border-radius: 50%; border: 2px solid var(--bg-card); }
 
+/* ===== NATIVE DATE INPUT ===== */
+input[type="date"] {
+    color-scheme: dark;
+    color: var(--text-primary);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
 /* ===== VOLUME TOOLTIP ===== */
 .volume-tooltip {
   position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background-color: var(--bg-card); color: var(--text-primary); padding: 4px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
@@ -225,6 +236,8 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
 .hover\:bg-indigo-700:hover { background-color: #b52b17 !important; }
 .bg-red-500 { background-color: var(--accent-primary) !important; }
 .hover\:bg-red-600:hover { background-color: #b52b17 !important; }
+.bg-green-500 { background-color: #22c55e !important; }
+.hover\:bg-green-600:hover { background-color: #16a34a !important; }
 .bg-slate-500 { background-color: var(--text-secondary) !important; color: var(--bg-main) !important; }
 .hover\:bg-slate-600:hover { background-color: #8a9e95 !important; }
 .focus\:ring-indigo-500:focus { --tw-ring-color: var(--accent-secondary) !important; }

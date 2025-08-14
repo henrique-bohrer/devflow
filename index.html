@@ -11,7 +11,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Patrick+Hand&display=swap"
     rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@3.0.5/dist/vanilla-calendar.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/all.min.css">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" href="icone.png">
@@ -115,16 +114,18 @@
         <div class="flex justify-between items-center mb-4">
           <h3 id="agenda-title" class="text-3xl font-bold text-gray-700" style="font-family: 'Patrick Hand', cursive;">
             Selecione um evento</h3>
-          <button id="close-agenda-btn" class="text-gray-500 hover:text-gray-800">
-            <i class="fa-solid fa-times fa-2x"></i>
-          </button>
+          <div class="flex items-center gap-4">
+            <button id="save-agenda-btn"
+              class="btn py-2 px-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md hidden">Salvar</button>
+            <button id="close-agenda-btn" class="text-gray-500 hover:text-gray-800">
+              <i class="fa-solid fa-times fa-2x"></i>
+            </button>
+          </div>
         </div>
-        <div id="agenda-input"
-          class="w-full flex-grow bg-transparent text-gray-800 text-xl leading-loose focus:outline-none resize-none p-2 overflow-y-auto"
-          style="font-family: 'Patrick Hand', cursive;">
-          <p class="text-gray-500" style="font-family: 'Inter', sans-serif;">As tarefas do evento selecionado aparecerão
-            aqui.</p>
-        </div>
+        <textarea id="agenda-input"
+          class="w-full flex-grow bg-transparent text-gray-800 text-xl focus:outline-none resize-none p-2 overflow-y-auto custom-scrollbar"
+          style="font-family: 'Patrick Hand', cursive;"
+          placeholder="As tarefas do evento selecionado aparecerão aqui."></textarea>
       </div>
     </div>
   </div>
@@ -144,8 +145,10 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="mb-4">
-            <label class="block text-sm font-medium text-slate-300 mb-2">Data do Evento</label>
-            <div id="event-datepicker" class="bg-slate-700 rounded-lg"></div>
+            <label for="event-date-input" class="block text-sm font-medium text-slate-300 mb-2">Data do Evento</label>
+            <input type="date" id="event-date-input"
+              class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              required>
           </div>
           <div class="mb-4">
             <label for="event-tasks-input" class="block text-sm font-medium text-slate-300 mb-2">Tarefas /
@@ -250,7 +253,6 @@
   </div>
   <div id="social-links-container" class="fixed bottom-44 right-9 flex flex-col items-center space-y-4"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@3.0.5/dist/vanilla-calendar.min.js" defer></script>
   <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
