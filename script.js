@@ -217,12 +217,12 @@ function renderUpcomingEvents() {
     eventsCache.forEach(event => {
         const countdown = getCountdownText(event.date);
         const eventEl = document.createElement('div');
-        eventEl.className = 'event-item p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-indigo-100';
+        eventEl.className = 'event-item p-3 rounded-lg cursor-pointer transition-all duration-200 bg-slate-700 hover:bg-slate-600';
         eventEl.dataset.eventId = event.id;
 
         eventEl.innerHTML = `
             <div class="flex justify-between items-center">
-                <span class="font-bold text-gray-700 truncate">${event.title}</span>
+                <span class="font-bold text-slate-100 truncate">${event.title}</span>
                 <div class="flex items-center">
                     <button title="Editar evento" data-edit-id="${event.id}" class="edit-event-btn text-gray-400 hover:text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center">
                         <i class="fa-solid fa-pencil"></i>
@@ -232,7 +232,7 @@ function renderUpcomingEvents() {
                     </button>
                 </div>
             </div>
-            <p class="text-sm text-indigo-500 font-semibold">${countdown}</p>`;
+            <p class="text-sm text-slate-400 font-semibold">${countdown}</p>`;
 
         upcomingEventsList.appendChild(eventEl);
 
@@ -253,15 +253,20 @@ function displayEventDetails(eventId) {
     const event = eventsCache.find(e => e.id == eventId);
     if (!event) return;
 
+    // Explicitly add/remove class for highlighting
     document.querySelectorAll('.event-item').forEach(el => {
-        el.classList.toggle('bg-indigo-100', el.dataset.eventId == eventId);
+        if (el.dataset.eventId == eventId) {
+            el.classList.add('bg-indigo-600');
+        } else {
+            el.classList.remove('bg-indigo-600');
+        }
     });
 
     agendaTitle.textContent = event.title;
     agendaInput.value = event.content || '';
-    agendaInput.dataset.currentEventId = event.id; // Armazena o ID do evento atual
+    agendaInput.dataset.currentEventId = event.id;
 
-    saveAgendaBtn.classList.add('hidden'); // Esconde o botão ao selecionar novo item
+    saveAgendaBtn.classList.add('hidden');
 }
 
 /**
@@ -273,7 +278,7 @@ function resetAgendaDetails() {
     agendaInput.placeholder = 'As tarefas do evento selecionado aparecerão aqui.';
     delete agendaInput.dataset.currentEventId;
     saveAgendaBtn.classList.add('hidden');
-    document.querySelectorAll('.event-item').forEach(el => el.classList.remove('bg-indigo-100'));
+    document.querySelectorAll('.event-item').forEach(el => el.classList.remove('bg-indigo-600'));
 }
 
 /**
@@ -701,8 +706,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     closeAgendaBtn?.addEventListener('click', () => {
-        // CORREÇÃO: Remover a classe 'is-open' para fechar.
         agendaModal.classList.remove('is-open');
+        resetAgendaDetails(); // Limpa a seleção ao fechar
     });
 
     addNewEventBtn?.addEventListener('click', () => openEventEditor());
