@@ -52,7 +52,8 @@ const closeAgendaBtn = document.getElementById('close-agenda-btn');
 const upcomingEventsList = document.getElementById('upcoming-events-list');
 const addNewEventBtn = document.getElementById('add-new-event-btn');
 const agendaTitle = document.getElementById('agenda-title');
-const agendaInput = document.getElementById('agenda-input'); // Usado para exibir detalhes
+const agendaInput = document.getElementById('agenda-input'); // Agora uma textarea
+const saveAgendaBtn = document.getElementById('save-agenda-btn'); // Botão para salvar edições diretas
 
 // ✅ NOVOS ELEMENTOS DO MODAL DE EDIÇÃO DE EVENTO
 const eventEditorModal = document.getElementById('event-editor-modal');
@@ -62,7 +63,7 @@ const eventIdInput = document.getElementById('event-id');
 const eventTitleInput = document.getElementById('event-title-input');
 const eventTasksInput = document.getElementById('event-tasks-input');
 const cancelEventEditorBtn = document.getElementById('cancel-event-editor-btn');
-const eventDatepickerEl = document.getElementById('event-datepicker');
+const eventDateInput = document.getElementById('event-date-input');
 
 // Outros Elementos (Mantidos)
 const pixDonationBtn = document.getElementById('pix-donation-btn');
@@ -86,7 +87,6 @@ let isPaused = true;
 let currentMode = 'focus';
 let areSoundsUnlocked = false;
 let user = null;
-let eventDatepickerInstance = null; // Instância do calendário do editor
 let eventsCache = []; // Cache para guardar os eventos carregados
 
 const pomodoroPresets = {
@@ -223,18 +223,26 @@ function renderUpcomingEvents() {
         eventEl.innerHTML = `
             <div class="flex justify-between items-center">
                 <span class="font-bold text-gray-700 truncate">${event.title}</span>
-                <button data-edit-id="${event.id}" class="edit-event-btn text-gray-400 hover:text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center">
-                    <i class="fa-solid fa-pencil"></i>
-                </button>
+                <div class="flex items-center">
+                    <button title="Editar evento" data-edit-id="${event.id}" class="edit-event-btn text-gray-400 hover:text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-pencil"></i>
+                    </button>
+                    <button title="Excluir evento" data-delete-id="${event.id}" class="delete-event-btn text-gray-400 hover:text-red-500 w-8 h-8 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
             </div>
             <p class="text-sm text-indigo-500 font-semibold">${countdown}</p>`;
 
         upcomingEventsList.appendChild(eventEl);
 
         eventEl.addEventListener('click', (e) => {
-            if (!e.target.closest('.edit-event-btn')) displayEventDetails(event.id);
+            if (!e.target.closest('.edit-event-btn') && !e.target.closest('.delete-event-btn')) {
+                displayEventDetails(event.id);
+            }
         });
         eventEl.querySelector('.edit-event-btn').addEventListener('click', () => openEventEditor(event.id));
+        eventEl.querySelector('.delete-event-btn').addEventListener('click', () => handleDeleteEvent(event.id));
     });
 }
 
@@ -250,8 +258,10 @@ function displayEventDetails(eventId) {
     });
 
     agendaTitle.textContent = event.title;
-    const formattedContent = (event.content || '').split('\n').map(line => `<p>${line || '&nbsp;'}</p>`).join('');
-    agendaInput.innerHTML = formattedContent || '<p class="text-gray-500">Nenhuma tarefa para este evento.</p>';
+    agendaInput.value = event.content || '';
+    agendaInput.dataset.currentEventId = event.id; // Armazena o ID do evento atual
+
+    saveAgendaBtn.classList.add('hidden'); // Esconde o botão ao selecionar novo item
 }
 
 /**
@@ -259,8 +269,81 @@ function displayEventDetails(eventId) {
  */
 function resetAgendaDetails() {
     agendaTitle.textContent = 'Selecione um evento';
-    agendaInput.innerHTML = '<p class="text-gray-500" style="font-family: \'Inter\', sans-serif;">As tarefas do evento selecionado aparecerão aqui.</p>';
+    agendaInput.value = '';
+    agendaInput.placeholder = 'As tarefas do evento selecionado aparecerão aqui.';
+    delete agendaInput.dataset.currentEventId;
+    saveAgendaBtn.classList.add('hidden');
     document.querySelectorAll('.event-item').forEach(el => el.classList.remove('bg-indigo-100'));
+}
+
+/**
+ * Salva as alterações feitas diretamente na área de texto da agenda.
+ */
+async function handleDirectSave() {
+    const eventId = agendaInput.dataset.currentEventId;
+    if (!eventId) return;
+
+    const newContent = agendaInput.value;
+    saveAgendaBtn.disabled = true;
+    saveAgendaBtn.textContent = 'Salvando...';
+
+    try {
+        const { error } = await _supabase
+            .from('events')
+            .update({ content: newContent })
+            .eq('id', eventId);
+
+        if (error) throw error;
+
+        const eventInCache = eventsCache.find(e => e.id == eventId);
+        if (eventInCache) {
+            eventInCache.content = newContent;
+        }
+
+        saveAgendaBtn.classList.add('hidden');
+
+    } catch (err) {
+        console.error("Erro ao salvar anotações:", err);
+        alert("Não foi possível salvar as alterações.");
+    } finally {
+        saveAgendaBtn.disabled = false;
+        saveAgendaBtn.textContent = 'Salvar';
+    }
+}
+
+async function handleDeleteEvent(eventId) {
+    if (!eventId) return;
+
+    const eventToDelete = eventsCache.find(e => e.id == eventId);
+    if (!eventToDelete) return;
+
+    const confirmation = confirm(`Tem certeza que deseja excluir o evento "${eventToDelete.title}"?\nEsta ação não pode ser desfeita.`);
+
+    if (confirmation) {
+        try {
+            const { error } = await _supabase
+                .from('events')
+                .delete()
+                .eq('id', eventId);
+
+            if (error) throw error;
+
+            // Remove from cache
+            eventsCache = eventsCache.filter(e => e.id != eventId);
+
+            // Check if the deleted event was the one being displayed
+            if (agendaInput.dataset.currentEventId == eventId) {
+                resetAgendaDetails();
+            }
+
+            // Re-render the list
+            renderUpcomingEvents();
+
+        } catch (err) {
+            console.error("Erro ao excluir evento:", err);
+            alert("Não foi possível excluir o evento.");
+        }
+    }
 }
 
 /**
@@ -292,11 +375,12 @@ function openEventEditor(eventId = null) {
         eventIdInput.value = event.id;
         eventTitleInput.value = event.title;
         eventTasksInput.value = event.content;
-        initializeEventDatePicker(new Date(event.date + 'T00:00:00'));
+        eventDateInput.value = event.date; // Supabase date is 'YYYY-MM-DD'
     } else {
         eventEditorTitle.textContent = "Adicionar Novo Evento";
         eventIdInput.value = '';
-        initializeEventDatePicker(new Date());
+        // Set to today's date in 'YYYY-MM-DD' format
+        eventDateInput.value = new Date().toISOString().slice(0, 10);
     }
     eventEditorModal.classList.remove('hidden');
     eventEditorModal.classList.add('flex');
@@ -308,10 +392,6 @@ function openEventEditor(eventId = null) {
 function closeEventEditor() {
     eventEditorModal.classList.add('hidden');
     eventEditorModal.classList.remove('flex');
-    if (eventDatepickerInstance) {
-        eventDatepickerInstance.destroy();
-        eventDatepickerInstance = null;
-    }
 }
 
 /**
@@ -321,8 +401,11 @@ async function handleEventSubmit(e) {
     e.preventDefault();
     if (!user) return alert("Você precisa estar logado para salvar um evento.");
 
-    const selectedDate = eventDatepickerInstance.selectedDates[0];
-    if (!selectedDate) return alert("Por favor, selecione uma data para o evento.");
+    const selectedDate = eventDateInput.value;
+    if (!selectedDate) {
+        alert("Por favor, selecione uma data para o evento.");
+        return;
+    }
 
     const eventData = {
         user_id: user.id,
@@ -343,28 +426,6 @@ async function handleEventSubmit(e) {
         console.error("Erro ao salvar evento:", err);
         alert("Não foi possível salvar o evento.");
     }
-}
-
-/**
- * Inicializa o calendário dentro do modal de edição.
- */
-function initializeEventDatePicker(initialDate) {
-    if (eventDatepickerInstance) eventDatepickerInstance.destroy();
-
-    const checkInterval = setInterval(() => {
-        if (window.VanillaCalendarPro) {
-            clearInterval(checkInterval);
-            eventDatepickerInstance = new window.VanillaCalendarPro.Calendar(eventDatepickerEl, {
-                settings: {
-                    lang: 'pt-BR',
-                    visibility: { theme: 'dark' },
-                    selection: { day: 'single' },
-                    selected: { dates: [initialDate.toISOString().slice(0, 10)] }
-                }
-            });
-            eventDatepickerInstance.init();
-        }
-    }, 100);
 }
 
 // --- LÓGICA DO POMODORO, PLAYER, IA, ETC. (CÓDIGO ORIGINAL MANTIDO) ---
@@ -647,6 +708,16 @@ document.addEventListener('DOMContentLoaded', () => {
     addNewEventBtn?.addEventListener('click', () => openEventEditor());
     cancelEventEditorBtn?.addEventListener('click', closeEventEditor);
     eventEditorForm?.addEventListener('submit', handleEventSubmit);
+
+    // Listener para salvar edições diretas na agenda
+    saveAgendaBtn?.addEventListener('click', handleDirectSave);
+
+    // Listener para mostrar o botão de salvar ao digitar na agenda
+    agendaInput?.addEventListener('input', () => {
+        if (agendaInput.dataset.currentEventId) {
+            saveAgendaBtn.classList.remove('hidden');
+        }
+    });
 
     // Assistente de IA
     aiAssistantBtn?.addEventListener('click', () => aiChatWindow.classList.toggle('is-chat-open'));
