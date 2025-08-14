@@ -266,6 +266,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   animation: fadeInScale 0.3s ease-out forwards;
 }
 
+#agenda-modal.is-open > div {
+    animation: fadeInScale 0.3s ease-out forwards;
+}
+
 /* ===== TASK LIST ANIMATIONS ===== */
 @keyframes fadeOutShrink {
   from {
