@@ -19,7 +19,6 @@
 
 <body class="bg-slate-900 overflow-x-hidden">
 
-  <!-- ✅ NOVA TELA DE INTRODUÇÃO ANIMADA -->
   <div id="loader" class="loader">
     <div class="loader-content">
       <img src="icone.png" alt="Logo DevFlow Pomodoro" class="loader-logo">
@@ -29,9 +28,7 @@
     </div>
   </div>
 
-  <div id="user-session-display" class="fixed top-4 right-4 z-50">
-    <!-- O conteúdo aqui será preenchido pelo JavaScript -->
-  </div>
+  <div id="user-session-display" class="fixed top-4 right-4 z-50"></div>
 
   <main class="flex-grow p-4 md:p-6 pb-32 flex items-center min-h-screen">
     <div class="w-full max-w-md mx-auto flex flex-col items-center">
@@ -100,43 +97,78 @@
     <i class="fa-solid fa-calendar-days fa-2x"></i>
   </button>
 
-  <!-- Agenda Modal -->
   <div id="agenda-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center hidden">
-    <div class="bg-white w-full max-w-4xl h-[80vh] rounded-lg shadow-2xl p-8 flex flex-col md:flex-row gap-8">
-      <!-- Calendar Column -->
-      <div class="w-full md:w-1/2 flex flex-col">
-        <div class="flex items-center justify-center gap-2 mb-4">
-          <button id="view-month-btn" class="agenda-view-btn active">Mês</button>
-          <button id="view-year-btn" class="agenda-view-btn">Ano</button>
+    <div
+      class="bg-white w-full max-w-4xl h-[80vh] rounded-2xl shadow-2xl p-6 sm:p-8 flex flex-col md:flex-row gap-6 sm:gap-8">
+      <div class="w-full md:w-1/3 flex flex-col border-r border-gray-200 pr-6">
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">Próximos Eventos</h3>
+        <div id="upcoming-events-list" class="flex-grow overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+          <p class="text-gray-400">Nenhum evento futuro. Adicione um!</p>
         </div>
-        <div id="monthly-calendar" class="flex-grow"></div>
+        <button id="add-new-event-btn"
+          class="btn w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+          <i class="fa-solid fa-plus mr-2"></i>Adicionar Evento
+        </button>
       </div>
 
-      <!-- Agenda Column -->
-      <div id="agenda-paper" class="w-full md:w-1/2 h-full flex flex-col">
+      <div id="agenda-paper" class="w-full md:w-2/3 h-full flex flex-col">
         <div class="flex justify-between items-center mb-4">
           <h3 id="agenda-title" class="text-3xl font-bold text-gray-700" style="font-family: 'Patrick Hand', cursive;">
-            Agenda do Dia</h3>
+            Selecione um evento</h3>
           <button id="close-agenda-btn" class="text-gray-500 hover:text-gray-800">
             <i class="fa-solid fa-times fa-2x"></i>
           </button>
         </div>
-        <form id="agenda-form" class="flex-grow flex flex-col">
-          <div id="agenda-input"
-            class="w-full flex-grow bg-transparent text-gray-800 text-xl leading-loose focus:outline-none resize-none p-2 overflow-y-auto"
-            style="font-family: 'Patrick Hand', cursive;"></div>
-          <button type="submit" class="hidden">Salvar</button>
-        </form>
+        <div id="agenda-input"
+          class="w-full flex-grow bg-transparent text-gray-800 text-xl leading-loose focus:outline-none resize-none p-2 overflow-y-auto"
+          style="font-family: 'Patrick Hand', cursive;">
+          <p class="text-gray-500" style="font-family: 'Inter', sans-serif;">As tarefas do evento selecionado aparecerão
+            aqui.</p>
+        </div>
       </div>
+    </div>
+  </div>
+
+
+  <div id="event-editor-modal"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] items-center justify-center hidden">
+    <div class="bg-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl p-8 border border-slate-700">
+      <form id="event-editor-form">
+        <input type="hidden" id="event-id">
+        <h3 id="event-editor-title" class="text-2xl font-bold text-white mb-6">Adicionar Novo Evento</h3>
+        <div class="mb-4">
+          <label for="event-title-input" class="block text-sm font-medium text-slate-300 mb-2">Título do Evento</label>
+          <input type="text" id="event-title-input" placeholder="Ex: Prova de Cálculo"
+            class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            required>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Data do Evento</label>
+            <div id="event-datepicker" class="bg-slate-700 rounded-lg"></div>
+          </div>
+          <div class="mb-4">
+            <label for="event-tasks-input" class="block text-sm font-medium text-slate-300 mb-2">Tarefas /
+              Anotações</label>
+            <textarea id="event-tasks-input" rows="10"
+              placeholder="- Estudar capítulo 3&#10;- Fazer lista de exercícios"
+              class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none custom-scrollbar"></textarea>
+          </div>
+        </div>
+        <div class="flex justify-end gap-4 mt-6">
+          <button type="button" id="cancel-event-editor-btn"
+            class="btn py-2 px-6 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-lg">Cancelar</button>
+          <button type="submit"
+            class="btn py-2 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg">Salvar</button>
+        </div>
+      </form>
     </div>
   </div>
 
   <footer id="footer-music-player"
     class="fixed bottom-0 left-0 w-full bg-slate-900/70 backdrop-blur-xl border-t border-slate-800 z-40">
     <div class="max-w-xl mx-auto p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-
       <div class="w-full sm:w-auto flex items-center justify-between">
-        <!-- Controles de Mídia -->
         <div class="flex items-center gap-4 flex-shrink-0">
           <button id="player-prev-btn"
             class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
@@ -151,19 +183,13 @@
             class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
             disabled><i class="fa-solid fa-forward-step fa-lg"></i></button>
         </div>
-
-        <!-- Botão de Volume (Mobile) -->
         <button id="toggle-volume-btn"
           class="w-10 h-10 flex sm:hidden items-center justify-center text-slate-400 hover:text-white transition-colors">
           <i class="fa-solid fa-volume-high"></i>
         </button>
       </div>
-
-      <!-- Informações da Faixa e Volume Slider -->
       <div class="w-full flex-grow flex flex-col items-center gap-1.5">
         <p id="player-current-track-name" class="font-semibold text-sm truncate text-center">Rádio Lo-Fi</p>
-
-        <!-- Container do Volume (inclui ícone e slider) -->
         <div id="volume-control-container"
           class="w-full max-w-xs items-center gap-2 flex-shrink-0 relative hidden sm:flex">
           <i class="fa-solid fa-volume-low text-slate-500"></i>
@@ -216,63 +242,13 @@
   <audio id="break-notification-sound" src="tic-tac.mp3" preload="auto"></audio>
   <audio id="warning-sound" src="tic-tac.mp3" preload="auto"></audio>
 
-  <!-- PIX Donation Modal -->
   <div id="pix-modal"
     class="auth-modal-container fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
-    <div class="w-full max-w-sm bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 relative">
-      <button id="close-pix-modal-btn"
-        class="absolute top-4 right-4 h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors"><i
-          class="fa-solid fa-times"></i></button>
-      <h3 class="text-2xl font-bold text-slate-100 mb-4 text-center">Apoie este projeto!</h3>
-      <p class="text-center text-slate-400 mb-6">Se esta ferramenta foi útil para você, considere fazer uma doação via
-        PIX.</p>
-      <div class="bg-slate-700 p-4 rounded-lg text-center">
-        <img src="qrcode-pix.png" alt="QR Code PIX" class="w-48 h-48 mx-auto mb-4 rounded-lg">
-        <p class="text-sm text-slate-400">Chave PIX (Aleatória):</p>
-        <p id="pix-key" class="font-mono text-lg text-white my-2 break-all">e64fbe84-76bc-4a3f-9d17-cd03ff3d7fa9</p>
-        <button id="copy-pix-key-btn"
-          class="btn w-full py-2 mt-4 bg-indigo-600 text-white font-semibold rounded-lg">Copiar Chave</button>
-      </div>
-    </div>
   </div>
-
-  <!-- AI Assistant Chat Window -->
   <div id="ai-chat-window"
     class="fixed bottom-28 left-6 w-96 max-w-[90vw] bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 z-50 flex-col">
-    <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-      <h4 class="text-lg font-bold">Assistente Pomodoro</h4>
-      <button id="close-chat-btn"
-        class="h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors">
-        <i class="fa-solid fa-times"></i>
-      </button>
-    </div>
-    <div id="chat-messages" class="flex-grow p-4 space-y-4 overflow-y-auto h-96 custom-scrollbar">
-      <!-- Mensagens do Chat -->
-    </div>
-    <div class="p-4 border-t border-slate-700">
-      <form id="chat-form" class="flex gap-2">
-        <input type="text" id="chat-input" placeholder="Pergunte algo..."
-          class="flex-grow p-2 border border-slate-600 rounded-lg bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition text-white">
-        <button type="submit"
-          class="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg btn">
-          <i class="fa-solid fa-paper-plane"></i>
-        </button>
-      </form>
-    </div>
   </div>
-
-  <!-- Social Links -->
-  <div id="social-links-container" class="fixed bottom-44 right-9 flex flex-col items-center space-y-4">
-    <a href="https://www.instagram.com/henriquebbohrer/" target="_blank" class="social-link">
-      <i class="fa-brands fa-instagram fa-lg"></i>
-    </a>
-    <a href="https://www.linkedin.com/in/henrique-bressiani-bohrer-9457a5207/" target="_blank" class="social-link">
-      <i class="fa-brands fa-linkedin fa-lg"></i>
-    </a>
-    <a href="https://github.com/henrique-bohrer/" target="_blank" class="social-link">
-      <i class="fa-brands fa-github fa-lg"></i>
-    </a>
-  </div>
+  <div id="social-links-container" class="fixed bottom-44 right-9 flex flex-col items-center space-y-4"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@3.0.5/dist/vanilla-calendar.min.js" defer></script>
   <script src="config.js"></script>

@@ -470,3 +470,18 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
 #monthly-calendar.is-updating {
   animation: calendarReveal 0.3s ease-out forwards;
 }
+
+#agenda-modal,
+.auth-modal-container,
+#pix-modal {
+    display: none; /* Por padrão, o modal é invisível */
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#agenda-modal.is-open, /* <-- A MÁGICA ACONTECE AQUI */
+.auth-modal-container.is-open,
+#pix-modal.is-open {
+    display: flex; /* Fica visível QUANDO tem a classe 'is-open' */
+    opacity: 1;
+}
