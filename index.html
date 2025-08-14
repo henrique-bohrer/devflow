@@ -247,6 +247,22 @@
 
   <div id="pix-modal"
     class="auth-modal-container fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+    <div class="w-full max-w-sm bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 relative text-center">
+      <button id="close-pix-modal-btn"
+        class="absolute top-4 right-4 h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors">
+        <i class="fa-solid fa-times"></i>
+      </button>
+      <h3 class="text-2xl font-bold text-slate-100 mb-4">Apoie o Projeto</h3>
+      <p class="text-slate-400 mb-6">Se esta ferramenta te ajudou, considere fazer uma doação via PIX.</p>
+      <img src="qrcode-pix.png" alt="QR Code PIX" class="w-48 h-48 mx-auto rounded-lg bg-white p-2">
+      <p class="text-slate-400 mt-6 mb-2 text-sm">Ou copie a chave:</p>
+      <div class="flex items-center bg-slate-700 rounded-lg p-2">
+        <span id="pix-key"
+          class="text-indigo-400 font-mono text-sm truncate flex-grow text-left">e64fbe84-76bc-4a3f-9d17-cd03ff3d7fa9</span>
+        <button id="copy-pix-key-btn"
+          class="btn bg-indigo-600 text-white font-semibold rounded-lg px-4 py-2 ml-4 flex-shrink-0">Copiar</button>
+      </div>
+    </div>
   </div>
   <div id="ai-chat-window"
     class="fixed bottom-28 left-6 w-96 max-w-[90vw] bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 z-50 flex flex-col">
