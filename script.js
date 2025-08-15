@@ -277,7 +277,7 @@ function resetAgendaDetails() {
     agendaInput.value = '';
     agendaInput.placeholder = 'As tarefas do evento selecionado aparecerão aqui.';
     delete agendaInput.dataset.currentEventId;
-    saveAgendaBtn.classList.add('hidden');
+    saveAgendaBtn.classList.add('hidden'); // Esconde o botão ao resetar
     document.querySelectorAll('.event-item').forEach(el => el.classList.remove('bg-indigo-600'));
 }
 
@@ -300,12 +300,13 @@ async function handleDirectSave() {
 
         if (error) throw error;
 
+        // Atualiza o cache local para refletir a mudança
         const eventInCache = eventsCache.find(e => e.id == eventId);
         if (eventInCache) {
             eventInCache.content = newContent;
         }
 
-        saveAgendaBtn.classList.add('hidden');
+        saveAgendaBtn.classList.add('hidden'); // Esconde o botão após salvar
 
     } catch (err) {
         console.error("Erro ao salvar anotações:", err);
@@ -719,6 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listener para mostrar o botão de salvar ao digitar na agenda
     agendaInput?.addEventListener('input', () => {
+        // Mostra o botão de salvar apenas se um evento estiver selecionado
         if (agendaInput.dataset.currentEventId) {
             saveAgendaBtn.classList.remove('hidden');
         }

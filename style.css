@@ -142,6 +142,7 @@ body {
 
 #agenda-input {
     line-height: 2.5rem; /* Matches the paper lines */
+    font-size: 1.5rem;
 }
 
 /* ===== PRESET PICKER ===== */
@@ -225,6 +226,8 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
 .hover\:bg-indigo-700:hover { background-color: #b52b17 !important; }
 .bg-red-500 { background-color: var(--accent-primary) !important; }
 .hover\:bg-red-600:hover { background-color: #b52b17 !important; }
+.bg-green-500 { background-color: #22c55e !important; }
+.hover\:bg-green-600:hover { background-color: #16a34a !important; }
 .bg-slate-500 { background-color: var(--text-secondary) !important; color: var(--bg-main) !important; }
 .hover\:bg-slate-600:hover { background-color: #8a9e95 !important; }
 .focus\:ring-indigo-500:focus { --tw-ring-color: var(--accent-secondary) !important; }
