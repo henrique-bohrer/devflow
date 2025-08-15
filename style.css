@@ -26,50 +26,23 @@ body {
 
 /* ===== TELA DE CARREGAMENTO ===== */
 .loader {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--bg-main);
-  transition: opacity 0.7s ease-in-out, visibility 0.7s ease-in-out;
+  position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background-color: var(--bg-main); transition: opacity 0.7s ease-in-out, visibility 0.7s ease-in-out;
 }
-
 .loader.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+  opacity: 0; visibility: hidden; pointer-events: none;
 }
-
 .loader-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
 }
-
 .loader-logo {
-  width: 15rem;
-  height: auto;
-  opacity: 0;
-  animation: fadeInScaleUp 0.8s 0.2s ease-out forwards;
+  width: 15rem; height: auto; opacity: 0; animation: fadeInScaleUp 0.8s 0.2s ease-out forwards;
 }
-
 .loader-title {
-  font-size: 2.25rem;
-  font-weight: 800;
-  opacity: 0;
-  animation: fadeInUp 0.8s 0.8s ease-out forwards;
+  font-size: 2.25rem; font-weight: 800; opacity: 0; animation: fadeInUp 0.8s 0.8s ease-out forwards;
 }
-
 .loader-subtitle {
-  font-size: 1.125rem;
-  color: var(--text-secondary);
-  opacity: 0;
-  animation: fadeInUp 0.8s 1.2s ease-out forwards;
+  font-size: 1.125rem; color: var(--text-secondary); opacity: 0; animation: fadeInUp 0.8s 1.2s ease-out forwards;
 }
-
 .loader-paragraph {
   margin-top: 0.5rem;
   font-family: monospace;
@@ -79,172 +52,44 @@ body {
   white-space: nowrap;
   overflow: hidden;
 }
-
 .loader-paragraph.typing {
   border-right: 2px solid var(--accent-primary);
   animation: typing 3s steps(40, end), blinkCaret 0.75s step-end infinite, fadeInOnly 0.5s 2s ease-out forwards;
 }
 
 /* ===== ANIMATIONS ===== */
-@keyframes fadeInScaleUp {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
+@keyframes fadeInScaleUp { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInOnly { from { opacity: 0; } to { opacity: 1; } }
+@keyframes typing { from { width: 0 } to { width: 100% } }
+@keyframes blinkCaret { from, to { border-color: transparent } 50% { border-color: var(--accent-primary); } }
 
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
+@keyframes slideInFromRight { from { opacity: 0; transform: translateX(25px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideInFromLeft { from { opacity: 0; transform: translateX(-25px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideOutToLeft { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-25px); } }
+@keyframes slideOutToRight { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(25px); } }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
+.slide-in-from-right { animation: slideInFromRight 0.2s ease-out forwards; }
+.slide-in-from-left { animation: slideInFromLeft 0.2s ease-out forwards; }
+.slide-out-to-left { animation: slideOutToLeft 0.2s ease-out forwards; }
+.slide-out-to-right { animation: slideOutToRight 0.2s ease-out forwards; }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInOnly {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes typing {
-  from {
-    width: 0
-  }
-
-  to {
-    width: 100%
-  }
-}
-
-@keyframes blinkCaret {
-
-  from,
-  to {
-    border-color: transparent
-  }
-
-  50% {
-    border-color: var(--accent-primary);
-  }
-}
-
-@keyframes slideInFromRight {
-  from {
-    opacity: 0;
-    transform: translateX(25px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInFromLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-25px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideOutToLeft {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateX(-25px);
-  }
-}
-
-@keyframes slideOutToRight {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateX(25px);
-  }
-}
-
-.slide-in-from-right {
-  animation: slideInFromRight 0.2s ease-out forwards;
-}
-
-.slide-in-from-left {
-  animation: slideInFromLeft 0.2s ease-out forwards;
-}
-
-.slide-out-to-left {
-  animation: slideOutToLeft 0.2s ease-out forwards;
-}
-
-.slide-out-to-right {
-  animation: slideOutToRight 0.2s ease-out forwards;
-}
-
-@keyframes tick {
-  from {
-    transform: scale(1);
-  }
-
-  to {
-    transform: scale(1.01);
-  }
-}
-
-.timer-tick {
-  animation: tick 0.5s ease-out alternate;
-}
+@keyframes tick { from { transform: scale(1); } to { transform: scale(1.01); } }
+.timer-tick { animation: tick 0.5s ease-out alternate; }
 
 @keyframes pulseWarning {
-
-  0%,
-  100% {
-    transform: scale(1);
-    color: var(--text-primary);
-  }
-
-  50% {
-    transform: scale(1.03);
-    color: var(--warning-color);
-  }
+  0%, 100% { transform: scale(1); color: var(--text-primary); }
+  50% { transform: scale(1.03); color: var(--warning-color); }
 }
-
 .timer-warning {
   animation: pulseWarning 1s infinite;
 }
 
 @keyframes breathingGlow {
-
   0%,
   100% {
     text-shadow: 0 0 8px rgba(255, 248, 211, 0.2), 0 0 12px rgba(255, 248, 211, 0.2);
   }
-
   50% {
     text-shadow: 0 0 16px rgba(255, 248, 211, 0.4), 0 0 24px rgba(255, 248, 211, 0.3);
   }
@@ -255,95 +100,58 @@ body {
 }
 
 @keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 /* ===== CUSTOM SCROLLBAR ===== */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--border-color);
-  border-radius: 10px;
-}
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 10px; }
 
 /* ===== AGENDA MODAL ===== */
 #agenda-modal {
-  display: flex;
-  /* Overwrite hidden to use opacity for transitions */
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease-in-out;
+    display: flex; /* Overwrite hidden to use opacity for transitions */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
 }
 
 #agenda-modal.is-open {
-  opacity: 1;
-  pointer-events: auto;
+    opacity: 1;
+    pointer-events: auto;
 }
 
 #agenda-paper {
-  background-image:
-    repeating-linear-gradient(to bottom,
-      #E0E0E0 0,
-      #E0E0E0 1px,
-      transparent 1px,
-      transparent 2.5rem);
-  /* Creates the lines */
-  background-size: 100% 2.5rem;
-  line-height: 2.5rem;
-  /* Matches the line-height to the background lines */
-  color: #374151;
-  /* A dark gray for the text */
+    background-image:
+        repeating-linear-gradient(to bottom,
+            #E0E0E0 0,
+            #E0E0E0 1px,
+            transparent 1px,
+            transparent 2.5rem); /* Creates the lines */
+    background-size: 100% 2.5rem;
+    line-height: 2.5rem; /* Matches the line-height to the background lines */
+    color: #374151; /* A dark gray for the text */
 }
 
 #agenda-input {
-  line-height: 2.5rem;
-  /* Matches the paper lines */
+    line-height: 2.5rem; /* Matches the paper lines */
 }
 
 /* ===== PRESET PICKER ===== */
 .preset-display {
-  width: 180px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  font-weight: 700;
-  border: 2px solid var(--text-primary);
-  color: var(--text-primary);
-  border-radius: 0.75rem;
-  transition: all 0.2s ease;
+  width: 180px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 700; border: 2px solid var(--text-primary); color: var(--text-primary); border-radius: 0.75rem; transition: all 0.2s ease;
 }
-
 .preset-nav-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-  border-radius: 9999px;
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: all 0.2s ease; border-radius: 9999px;
 }
-
-.preset-nav-btn:hover {
-  background-color: rgba(255, 248, 211, 0.1);
-  color: var(--accent-primary);
-}
+.preset-nav-btn:hover { background-color: rgba(255, 248, 211, 0.1); color: var(--accent-primary); }
 
 /* ===== POMODORO MODE BUTTONS ===== */
 .pomodoro-mode-btn {
@@ -376,65 +184,19 @@ body {
 
 /* ===== CUSTOM PLAYER SLIDER ===== */
 input[type="range"].player-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 6px;
-  background: var(--border-color);
-  border-radius: 5px;
-  outline: none;
-  transition: background 0.1s ease;
+  -webkit-appearance: none; appearance: none; width: 100%; height: 6px; background: var(--border-color); border-radius: 5px; outline: none; transition: background 0.1s ease;
 }
-
 input[type="range"].player-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  background: var(--accent-primary);
-  cursor: pointer;
-  border-radius: 50%;
-  border: 2px solid var(--bg-card);
-  margin-top: -5px;
+  -webkit-appearance: none; appearance: none; width: 16px; height: 16px; background: var(--accent-primary); cursor: pointer; border-radius: 50%; border: 2px solid var(--bg-card); margin-top: -5px;
 }
-
-input[type="range"].player-slider::-moz-range-track {
-  width: 100%;
-  height: 6px;
-  cursor: pointer;
-  background: var(--border-color);
-  border-radius: 5px;
-}
-
-input[type="range"].player-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: var(--accent-primary);
-  cursor: pointer;
-  border-radius: 50%;
-  border: 2px solid var(--bg-card);
-}
+input[type="range"].player-slider::-moz-range-track { width: 100%; height: 6px; cursor: pointer; background: var(--border-color); border-radius: 5px; }
+input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px; background: var(--accent-primary); cursor: pointer; border-radius: 50%; border: 2px solid var(--bg-card); }
 
 /* ===== VOLUME TOOLTIP ===== */
 .volume-tooltip {
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--bg-card);
-  color: var(--text-primary);
-  padding: 4px 8px;
-  border-radius: 5px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
+  position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background-color: var(--bg-card); color: var(--text-primary); padding: 4px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
 }
-
-#volume-control-container:hover .volume-tooltip {
-  opacity: 1;
-}
+#volume-control-container:hover .volume-tooltip { opacity: 1; }
 
 /* ===== GENERAL BUTTON STYLES ===== */
 .btn {
@@ -453,86 +215,29 @@ input[type="range"].player-slider::-moz-range-thumb {
 }
 
 /* ===== SOBRESCREVENDO CLASSES DO TAILWIND ===== */
-.bg-slate-900 {
-  background-color: var(--bg-main) !important;
-}
-
-.bg-slate-800,
-.bg-slate-700,
-.bg-slate-900\/70 {
-  background-color: var(--bg-card) !important;
-}
-
-.border-slate-700,
-.border-slate-800,
-.border-slate-600 {
-  border-color: var(--border-color) !important;
-}
-
-.text-slate-400,
-.text-slate-500 {
-  color: var(--text-secondary) !important;
-}
-
-.text-slate-100,
-.text-slate-300 {
-  color: var(--text-primary) !important;
-}
-
-.text-indigo-400 {
-  color: var(--accent-secondary) !important;
-}
-
-.bg-indigo-600 {
-  background-color: var(--accent-primary) !important;
-  color: var(--text-primary) !important;
-}
-
-.hover\:bg-indigo-700:hover {
-  background-color: #b52b17 !important;
-}
-
-.bg-red-500 {
-  background-color: var(--accent-primary) !important;
-}
-
-.hover\:bg-red-600:hover {
-  background-color: #b52b17 !important;
-}
-
-.bg-slate-500 {
-  background-color: var(--text-secondary) !important;
-  color: var(--bg-main) !important;
-}
-
-.hover\:bg-slate-600:hover {
-  background-color: #8a9e95 !important;
-}
-
-.focus\:ring-indigo-500:focus {
-  --tw-ring-color: var(--accent-secondary) !important;
-}
-
-#player-play-pause-btn {
-  background-color: var(--accent-primary) !important;
-  color: var(--text-primary) !important;
-}
-
-#footer-music-player .text-slate-400 {
-  color: var(--text-secondary) !important;
-}
-
-#footer-music-player .hover\:text-white:hover {
-  color: var(--text-primary) !important;
-}
+.bg-slate-900 { background-color: var(--bg-main) !important; }
+.bg-slate-800, .bg-slate-700, .bg-slate-900\/70 { background-color: var(--bg-card) !important; }
+.border-slate-700, .border-slate-800, .border-slate-600 { border-color: var(--border-color) !important; }
+.text-slate-400, .text-slate-500 { color: var(--text-secondary) !important; }
+.text-slate-100, .text-slate-300 { color: var(--text-primary) !important; }
+.text-indigo-400 { color: var(--accent-secondary) !important; }
+.bg-indigo-600 { background-color: var(--accent-primary) !important; color: var(--text-primary) !important; }
+.hover\:bg-indigo-700:hover { background-color: #b52b17 !important; }
+.bg-red-500 { background-color: var(--accent-primary) !important; }
+.hover\:bg-red-600:hover { background-color: #b52b17 !important; }
+.bg-slate-500 { background-color: var(--text-secondary) !important; color: var(--bg-main) !important; }
+.hover\:bg-slate-600:hover { background-color: #8a9e95 !important; }
+.focus\:ring-indigo-500:focus { --tw-ring-color: var(--accent-secondary) !important; }
+#player-play-pause-btn { background-color: var(--accent-primary) !important; color: var(--text-primary) !important; }
+#footer-music-player .text-slate-400 { color: var(--text-secondary) !important; }
+#footer-music-player .hover\:text-white:hover { color: var(--text-primary) !important; }
 
 /* ===== AUTH MODAL ===== */
 .auth-modal-container {
   visibility: hidden;
   opacity: 0;
   transition: opacity 0.3s ease, visibility 0.3s ease;
-  z-index: 110;
-  /* Garante que o modal fique sobre outros elementos com z-index alto */
+  z-index: 110; /* Garante que o modal fique sobre outros elementos com z-index alto */
 }
 
 .auth-modal-container.is-open {
@@ -540,8 +245,12 @@ input[type="range"].player-slider::-moz-range-thumb {
   opacity: 1;
 }
 
-.auth-modal-container.is-open>div {
+.auth-modal-container.is-open > div {
   animation: fadeInScale 0.3s ease-out forwards;
+}
+
+#agenda-modal.is-open > div {
+    animation: fadeInScale 0.3s ease-out forwards;
 }
 
 /* ===== TASK LIST ANIMATIONS ===== */
@@ -549,10 +258,8 @@ input[type="range"].player-slider::-moz-range-thumb {
   from {
     opacity: 1;
     transform: scale(1);
-    max-height: 50px;
-    /* ou a altura do seu item */
+    max-height: 50px; /* ou a altura do seu item */
   }
-
   to {
     opacity: 0;
     transform: scale(0.9);
@@ -583,13 +290,8 @@ input[type="range"].player-slider::-moz-range-thumb {
 }
 
 @keyframes subtleFadeIn {
-  from {
-    opacity: 0.7;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0.7; }
+  to { opacity: 1; }
 }
 
 .task-updated {
@@ -609,10 +311,11 @@ input[type="range"].player-slider::-moz-range-thumb {
 
 /* ===== AI ASSISTANT & CHAT ===== */
 #ai-assistant-btn img {
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
 }
 
 #ai-chat-window {
+  display: flex;
   transform-origin: bottom left;
   transition: opacity 0.3s ease, transform 0.3s ease;
   opacity: 0;
@@ -627,8 +330,8 @@ input[type="range"].player-slider::-moz-range-thumb {
 }
 
 .ai-tooltip-text {
-  font-family: 'Patrick Hand', cursive;
-  font-size: 1.1rem;
+    font-family: 'Patrick Hand', cursive;
+    font-size: 1.1rem;
 }
 
 .chat-message {
@@ -653,20 +356,9 @@ input[type="range"].player-slider::-moz-range-thumb {
 }
 
 @keyframes typing-dots {
-
-  0%,
-  20% {
-    content: '.';
-  }
-
-  40% {
-    content: '..';
-  }
-
-  60%,
-  100% {
-    content: '...';
-  }
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
 }
 
 .typing-indicator span::after {
@@ -676,102 +368,101 @@ input[type="range"].player-slider::-moz-range-thumb {
 
 /* ===== VANILLA CALENDAR THEME OVERRIDE ===== */
 .vanilla-calendar {
-  background-color: transparent;
-  border: none;
-  width: 100%;
+    background-color: transparent;
+    border: none;
+    width: 100%;
 }
 
 .vanilla-calendar .vanilla-calendar-header,
 .vanilla-calendar .vanilla-calendar-week {
-  color: var(--text-secondary);
+    color: var(--text-secondary);
 }
 
 .vanilla-calendar .vanilla-calendar-day__btn {
-  background-color: transparent;
-  color: var(--text-primary);
+    background-color: transparent;
+    color: var(--text-primary);
 }
 
 .vanilla-calendar .vanilla-calendar-day__btn:hover {
-  background-color: rgba(255, 248, 211, 0.1);
+    background-color: rgba(255, 248, 211, 0.1);
 }
 
 .vanilla-calendar .vanilla-calendar-day__btn_today {
-  background-color: var(--accent-primary);
-  color: var(--text-primary);
-  border-radius: 4px;
+    background-color: var(--accent-primary);
+    color: var(--text-primary);
+    border-radius: 4px;
 }
 
 .vanilla-calendar .vanilla-calendar-day__btn_selected {
-  background-color: var(--accent-secondary);
-  color: var(--text-primary);
-  border-radius: 4px;
+    background-color: var(--accent-secondary);
+    color: var(--text-primary);
+    border-radius: 4px;
 }
 
 .vanilla-calendar .vanilla-calendar-arrow {
-  background-color: rgba(255, 248, 211, 0.1);
-  border-radius: 4px;
+    background-color: rgba(255, 248, 211, 0.1);
+    border-radius: 4px;
 }
-
 .vanilla-calendar .vanilla-calendar-arrow:hover {
-  background-color: rgba(255, 248, 211, 0.2);
+    background-color: rgba(255, 248, 211, 0.2);
 }
 
 /* ===== CUSTOM CALENDAR NAVIGATION ===== */
 .vc-header-nav {
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  width: 100%;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .vc-header-nav .vc-arrow-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1rem;
-  padding: 0.5rem;
-  cursor: pointer;
-  transition: color 0.2s ease, transform 0.2s ease;
-  flex-grow: 1;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+    flex-grow: 1;
 }
 
 .vc-header-nav .vc-arrow-btn:hover {
-  color: var(--text-primary);
-  transform: scale(1.1);
+    color: var(--text-primary);
+    transform: scale(1.1);
 }
 
 .vc-header-nav .vc-header__content {
-  color: var(--text-primary);
-  font-weight: 600;
-  flex-grow: 2;
-  text-align: center;
+    color: var(--text-primary);
+    font-weight: 600;
+    flex-grow: 2;
+    text-align: center;
 }
 
 /* ===== AGENDA VIEW SWITCHER ===== */
 .agenda-view-btn {
-  padding: 6px 16px;
-  border-radius: 6px;
-  background-color: transparent;
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-  border: 1px solid var(--border-color);
-  cursor: pointer;
+    padding: 6px 16px;
+    border-radius: 6px;
+    background-color: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
 }
 
 .agenda-view-btn:hover {
-  background-color: var(--bg-card);
-  color: var(--text-primary);
+    background-color: var(--bg-card);
+    color: var(--text-primary);
 }
 
 .agenda-view-btn.active {
-  background-color: var(--accent-primary);
-  color: var(--text-primary);
-  border-color: var(--accent-primary);
-  box-shadow: 0 2px 8px rgba(216, 55, 33, 0.2);
+    background-color: var(--accent-primary);
+    color: var(--text-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(216, 55, 33, 0.2);
 }
 
 /* ===== CALENDAR TRANSITION ===== */
@@ -780,7 +471,6 @@ input[type="range"].player-slider::-moz-range-thumb {
     opacity: 0;
     transform: scale(0.98) translateY(10px);
   }
-
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -794,17 +484,14 @@ input[type="range"].player-slider::-moz-range-thumb {
 #agenda-modal,
 .auth-modal-container,
 #pix-modal {
-  display: none;
-  /* Por padrão, o modal é invisível */
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+    display: none; /* Por padrão, o modal é invisível */
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
 }
 
-#agenda-modal.is-open,
-/* <-- A MÁGICA ACONTECE AQUI */
+#agenda-modal.is-open, /* <-- A MÁGICA ACONTECE AQUI */
 .auth-modal-container.is-open,
 #pix-modal.is-open {
-  display: flex;
-  /* Fica visível QUANDO tem a classe 'is-open' */
-  opacity: 1;
+    display: flex; /* Fica visível QUANDO tem a classe 'is-open' */
+    opacity: 1;
 }
