@@ -56,14 +56,7 @@ const agendaInput = document.getElementById('agenda-input'); // Agora uma textar
 const saveAgendaBtn = document.getElementById('save-agenda-btn'); // Botão para salvar edições diretas
 
 // ✅ NOVOS ELEMENTOS DO MODAL DE EDIÇÃO DE EVENTO
-const eventEditorModal = document.getElementById('event-editor-modal');
-const eventEditorForm = document.getElementById('event-editor-form');
-const eventEditorTitle = document.getElementById('event-editor-title');
-const eventIdInput = document.getElementById('event-id');
-const eventTitleInput = document.getElementById('event-title-input');
-const eventTasksInput = document.getElementById('event-tasks-input');
-const cancelEventEditorBtn = document.getElementById('cancel-event-editor-btn');
-const eventDateInput = document.getElementById('event-date-input');
+let eventEditorModal, eventEditorForm, eventEditorTitle, eventIdInput, eventTitleInput, eventTasksInput, cancelEventEditorBtn, eventDateInput;
 
 // Outros Elementos (Mantidos)
 const pixDonationBtn = document.getElementById('pix-donation-btn');
@@ -373,21 +366,25 @@ function getCountdownText(dateString) {
  * Abre o modal de edição para um novo evento ou um existente.
  */
 function openEventEditor(eventId = null) {
+    if (!eventEditorForm) return; // Adiciona uma guarda para segurança
     eventEditorForm.reset();
+
     if (eventId) {
         const event = eventsCache.find(e => e.id == eventId);
         if (!event) return;
         eventEditorTitle.textContent = "Editar Evento";
         eventIdInput.value = event.id;
         eventTitleInput.value = event.title;
-        eventTasksInput.value = event.content;
-        eventDateInput.value = event.date; // Supabase date is 'YYYY-MM-DD'
+        eventTasksInput.value = event.content || '';
+        eventDateInput.value = event.date;
     } else {
         eventEditorTitle.textContent = "Adicionar Novo Evento";
         eventIdInput.value = '';
-        // Set to today's date in 'YYYY-MM-DD' format
+        eventTitleInput.value = '';
+        eventTasksInput.value = '';
         eventDateInput.value = new Date().toISOString().slice(0, 10);
     }
+
     eventEditorModal.classList.remove('hidden');
     eventEditorModal.classList.add('flex');
 }
@@ -668,6 +665,16 @@ function addMessageToChat(sender, message) {
 // --- INICIALIZAÇÃO GERAL ---
 // --- INICIALIZAÇÃO GERAL ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Inicialização dos elementos do editor de eventos
+    eventEditorModal = document.getElementById('event-editor-modal');
+    eventEditorForm = document.getElementById('event-editor-form');
+    eventEditorTitle = document.getElementById('event-editor-title');
+    eventIdInput = document.getElementById('event-id');
+    eventTitleInput = document.getElementById('event-title-input');
+    eventTasksInput = document.getElementById('event-tasks-input');
+    cancelEventEditorBtn = document.getElementById('cancel-event-editor-btn');
+    eventDateInput = document.getElementById('event-date-input');
+
     // Autenticação
     closeAuthModalBtn?.addEventListener('click', () => authModal.classList.remove('is-open'));
     showRegisterBtn?.addEventListener('click', showRegisterView);

@@ -11,7 +11,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Patrick+Hand&display=swap"
     rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@3.0.5/dist/vanilla-calendar.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/all.min.css">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" href="icone.png">
@@ -151,8 +150,9 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="mb-4">
-            <label class="block text-sm font-medium text-slate-300 mb-2">Data do Evento</label>
-            <div id="event-datepicker" class="bg-slate-700 rounded-lg"></div>
+            <label for="event-date-input" class="block text-sm font-medium text-slate-300 mb-2">Data do Evento</label>
+            <input type="date" id="event-date-input"
+              class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
           </div>
           <div class="mb-4">
             <label for="event-tasks-input" class="block text-sm font-medium text-slate-300 mb-2">Tarefas /
@@ -296,7 +296,6 @@
   </div>
   <div id="social-links-container" class="fixed bottom-44 right-9 flex flex-col items-center space-y-4"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@3.0.5/dist/vanilla-calendar.min.js" defer></script>
   <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
