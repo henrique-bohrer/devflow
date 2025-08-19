@@ -96,11 +96,11 @@ let focusDuration, shortBreakDuration, longBreakDuration, cyclesBeforeLongBreak;
 async function checkUser() {
     const { data: { session } } = await _supabase.auth.getSession();
     user = session?.user;
-    updateUIForUser();
+    updateUIForUser(); // Primeiro atualiza a UI para criar os elementos
     if (user) {
         await loadUpcomingEvents();
     }
-    // Carrega o idioma salvo depois que a UI inicial e os eventos foram renderizados
+    // Carrega o idioma salvo DEPOIS que a UI inicial foi renderizada
     const savedLang = localStorage.getItem('pomodoroLanguage') || 'pt';
     setLanguage(savedLang);
 }
@@ -126,6 +126,12 @@ function updateUIForUser() {
         </div>
         <button id="lang-switcher-btn" class="btn py-2 px-3 bg-slate-700 text-white font-semibold rounded-lg hover:bg-slate-600 transition-colors">EN</button>
     `;
+
+    // Adiciona o evento de clique para o botão de idioma AQUI
+    document.getElementById('lang-switcher-btn')?.addEventListener('click', () => {
+        const newLang = currentLanguage === 'pt' ? 'en' : 'pt';
+        setLanguage(newLang);
+    });
 
     if (user) {
         document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
@@ -810,11 +816,6 @@ document.addEventListener('DOMContentLoaded', () => {
     closeChatBtn?.addEventListener('click', () => aiChatWindow.classList.remove('is-chat-open'));
     chatForm?.addEventListener('submit', handleChatSubmit);
 
-    // I18N
-    document.getElementById('lang-switcher-btn')?.addEventListener('click', () => {
-        const newLang = currentLanguage === 'pt' ? 'en' : 'pt';
-        setLanguage(newLang);
-    });
 
     // Modal PIX
     pixDonationBtn?.addEventListener('click', () => pixModal.classList.add('is-open'));
