@@ -100,21 +100,36 @@ async function checkUser() {
     if (user) {
         await loadUpcomingEvents();
     }
+    // Carrega o idioma salvo depois que a UI inicial e os eventos foram renderizados
+    const savedLang = localStorage.getItem('pomodoroLanguage') || 'pt';
+    setLanguage(savedLang);
 }
 
 function updateUIForUser() {
+    let content = '';
     if (user) {
-        userSessionDisplay.innerHTML = `
+        content = `
             <div class="flex items-center gap-4">
-                <span class="text-slate-300 font-semibold">Olá, ${user.email.split('@')[0]}</span>
-                <button id="logout-btn" class="text-sm text-indigo-400 hover:underline">Sair</button>
+                <span class="text-slate-300 font-semibold" data-i18n-key="greeting" data-i18n-params='{"name": "${user.email.split('@')[0]}"}'>Olá, ${user.email.split('@')[0]}</span>
+                <button id="logout-btn" class="text-sm text-indigo-400 hover:underline" data-i18n-key="logout">Sair</button>
             </div>`;
-        document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
     } else {
-        userSessionDisplay.innerHTML = `
-            <button id="login-btn-main" class="btn py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+        content = `
+            <button id="login-btn-main" class="btn py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors" data-i18n-key="login_register">
                 Fazer Login / Cadastrar
             </button>`;
+    }
+
+    userSessionDisplay.innerHTML = `
+        <div id="auth-container">
+            ${content}
+        </div>
+        <button id="lang-switcher-btn" class="btn py-2 px-3 bg-slate-700 text-white font-semibold rounded-lg hover:bg-slate-600 transition-colors">EN</button>
+    `;
+
+    if (user) {
+        document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
+    } else {
         document.getElementById('login-btn-main')?.addEventListener('click', () => authModal.classList.add('is-open'));
     }
 }
@@ -202,7 +217,7 @@ async function loadUpcomingEvents() {
 function renderUpcomingEvents() {
     upcomingEventsList.innerHTML = '';
     if (eventsCache.length === 0) {
-        upcomingEventsList.innerHTML = '<p class="text-gray-400 text-center mt-4">Nenhum evento futuro.</p>';
+        upcomingEventsList.innerHTML = `<p class="text-gray-400 text-center mt-4" data-i18n-key="no_upcoming_events">${translations[currentLanguage]['no_upcoming_events']}</p>`;
         resetAgendaDetails();
         return;
     }
@@ -213,14 +228,17 @@ function renderUpcomingEvents() {
         eventEl.className = 'event-item p-3 rounded-lg cursor-pointer transition-all duration-200 bg-slate-700 hover:bg-slate-600';
         eventEl.dataset.eventId = event.id;
 
+        const editTitle = translations[currentLanguage]['edit_event'] || 'Editar evento';
+        const deleteTitle = translations[currentLanguage]['delete'] || 'Excluir evento';
+
         eventEl.innerHTML = `
             <div class="flex justify-between items-center">
                 <span class="font-bold text-slate-100 truncate">${event.title}</span>
                 <div class="flex items-center">
-                    <button title="Editar evento" data-edit-id="${event.id}" class="edit-event-btn text-gray-400 hover:text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center">
+                    <button title="${editTitle}" data-edit-id="${event.id}" class="edit-event-btn text-gray-400 hover:text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center">
                         <i class="fa-solid fa-pencil"></i>
                     </button>
-                    <button title="Excluir evento" data-delete-id="${event.id}" class="delete-event-btn text-gray-400 hover:text-red-500 w-8 h-8 rounded-full flex items-center justify-center">
+                    <button title="${deleteTitle}" data-delete-id="${event.id}" class="delete-event-btn text-gray-400 hover:text-red-500 w-8 h-8 rounded-full flex items-center justify-center">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
@@ -356,10 +374,13 @@ function getCountdownText(dateString) {
     const diffTime = eventDate - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return "Evento passado";
-    if (diffDays === 0) return "É hoje!";
-    if (diffDays === 1) return "É amanhã!";
-    return `Faltam ${diffDays} dias`;
+    if (diffDays < 0) return translations[currentLanguage]['countdown_past'] || "Evento passado";
+    if (diffDays === 0) return translations[currentLanguage]['countdown_today'] || "É hoje!";
+    if (diffDays === 1) return translations[currentLanguage]['countdown_tomorrow'] || "É amanhã!";
+
+    const key = 'countdown_days';
+    const text = translations[currentLanguage][key] || `Faltam {days} dias`;
+    return text.replace('{days}', diffDays);
 }
 
 /**
@@ -431,18 +452,69 @@ async function handleEventSubmit(e) {
     }
 }
 
+// --- LÓGICA DE INTERNACIONALIZAÇÃO (I18N) ---
+let currentLanguage = 'pt';
+
+function setLanguage(lang) {
+    console.log(`[i18n] Setting language to: ${lang}`);
+    currentLanguage = lang;
+    localStorage.setItem('pomodoroLanguage', lang);
+    const langBtn = document.getElementById('lang-switcher-btn');
+    if (langBtn) {
+        langBtn.textContent = lang === 'pt' ? 'EN' : 'PT';
+    }
+
+    const elements = document.querySelectorAll('[data-i18n-key]');
+    console.log(`[i18n] Found ${elements.length} elements to translate.`);
+
+    elements.forEach(el => {
+        const key = el.getAttribute('data-i18n-key');
+        let text = translations[lang][key] || `%%${key}%%`; // Add markers for missing keys
+
+        if (el.hasAttribute('data-i18n-params')) {
+            try {
+                const params = JSON.parse(el.getAttribute('data-i18n-params'));
+                Object.keys(params).forEach(p => {
+                    text = text.replace(`{${p}}`, params[p]);
+                });
+            } catch (e) {
+                console.error(`[i18n] Failed to parse params for key: ${key}`, e);
+            }
+        }
+
+        console.log(`[i18n] Translating key '${key}' to '${text}'`);
+
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            if (el.placeholder) {
+                el.placeholder = text;
+            }
+        } else {
+            el.textContent = text;
+        }
+    });
+
+    // Since some dynamic elements might be re-rendered, let's re-translate them specifically
+    updateModeDisplay();
+    updatePresetDisplay();
+    renderUpcomingEvents(); // This will now use the correct language
+}
+
+
 // --- LÓGICA DO POMODORO, PLAYER, IA, ETC. (CÓDIGO ORIGINAL MANTIDO) ---
 
 // ... (todo o seu código de updatePresetDisplay, startTimer, callGeminiAPI, etc., vai aqui, exatamente como era antes)
 
 function updatePresetDisplay(isInitial = false, direction = 0) {
     const currentPresetKey = presetKeys[currentPresetIndex];
-    const presetName = pomodoroPresets[currentPresetKey].name;
+    const presetNameKey = `preset_${currentPresetKey}`;
+    const presetName = translations[currentLanguage][presetNameKey] || pomodoroPresets[currentPresetKey].name;
+
     if (isInitial) {
         presetDisplay.textContent = presetName;
         applyPreset(currentPresetKey);
         return;
     }
+
     const outClass = direction === 1 ? 'slide-out-to-left' : 'slide-out-to-right';
     const inClass = direction === 1 ? 'slide-in-from-right' : 'slide-in-from-left';
     presetDisplay.classList.add(outClass);
@@ -508,8 +580,8 @@ function updateTimerDisplay() {
 function updateModeDisplay() {
     modeButtons.forEach(btn => btn.classList.remove('active'));
     document.querySelector(`[data-mode="${currentMode}"]`)?.classList.add('active');
-    const modeTexts = { focus: 'Modo Foco', shortBreak: 'Pausa Curta', longBreak: 'Descanso Longo' };
-    currentModeDisplay.textContent = modeTexts[currentMode];
+    const modeKey = { focus: 'focus_mode', shortBreak: 'short_break', longBreak: 'long_break' }[currentMode];
+    currentModeDisplay.textContent = translations[currentLanguage][modeKey] || modeKey;
 }
 
 function setVolumeByMode(mode) {
@@ -738,6 +810,12 @@ document.addEventListener('DOMContentLoaded', () => {
     closeChatBtn?.addEventListener('click', () => aiChatWindow.classList.remove('is-chat-open'));
     chatForm?.addEventListener('submit', handleChatSubmit);
 
+    // I18N
+    document.getElementById('lang-switcher-btn')?.addEventListener('click', () => {
+        const newLang = currentLanguage === 'pt' ? 'en' : 'pt';
+        setLanguage(newLang);
+    });
+
     // Modal PIX
     pixDonationBtn?.addEventListener('click', () => pixModal.classList.add('is-open'));
     closePixModalBtn?.addEventListener('click', () => pixModal.classList.remove('is-open'));
@@ -756,6 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupRadioPlayer();
     requestNotificationPermission();
     checkUser(); // Ponto de entrada que inicia a verificação de usuário e o carregamento de dados
+
 });
 
 window.addEventListener('load', () => {
