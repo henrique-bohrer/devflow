@@ -527,10 +527,11 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
 
 .view-mobile #footer-music-player .max-w-xl {
     justify-content: center;
+    align-content: center;
 }
 
 .view-mobile #footer-music-player .sm\:w-auto {
-    width: auto;
+    width: 100%;
 }
 
 .view-mobile #footer-music-player .sm\:flex-row {
