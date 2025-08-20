@@ -497,3 +497,25 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
     display: flex; /* Fica visível QUANDO tem a classe 'is-open' */
     opacity: 1;
 }
+
+/* Estilos para o Modal de Seleção de Dispositivo */
+#device-selection-modal {
+    backdrop-filter: blur(8px);
+}
+
+/* Estilos de Visualização Responsiva */
+.view-desktop #pomodoro-section {
+    max-width: 480px;
+}
+
+.view-mobile #pomodoro-section {
+    padding: 1rem;
+}
+
+.view-mobile #timer-display {
+    font-size: 4rem;
+}
+
+.view-mobile #agenda-modal .flex-col {
+    height: 90vh;
+}
