@@ -505,7 +505,7 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
 
 /* Estilos de Visualização Responsiva */
 .view-mobile {
-    transform: scale(0.95);
+    transform: scale(0.975);
     transform-origin: top center;
 }
 
