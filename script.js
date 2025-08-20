@@ -106,30 +106,20 @@ async function checkUser() {
 }
 
 function updateUIForUser() {
-    let content = '';
-    if (user) {
-        content = `
-            <div class="flex items-center gap-4">
-                <span class="text-slate-300 font-semibold" data-i18n-key="greeting" data-i18n-params='{"name": "${user.email.split('@')[0]}"}'>Olá, ${user.email.split('@')[0]}</span>
-                <button id="logout-btn" class="text-sm text-indigo-400 hover:underline" data-i18n-key="logout">Sair</button>
-            </div>`;
-    } else {
-        content = `
-            <button id="login-btn-main" class="btn py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors" data-i18n-key="login_register">
-                Fazer Login / Cadastrar
-            </button>`;
-    }
-
-    userSessionDisplay.innerHTML = `
-        <div id="auth-container">
-            ${content}
-        </div>
-        <button id="lang-switcher-btn" class="btn py-2 px-3 bg-slate-700 text-white font-semibold rounded-lg hover:bg-slate-600 transition-colors">EN</button>
-    `;
+    const profileDropdown = document.getElementById('profile-dropdown');
 
     if (user) {
+        profileDropdown.innerHTML = `
+            <div class="p-2 text-white" data-i18n-key="greeting" data-i18n-params='{"name": "${user.email.split('@')[0]}"}'>Olá, ${user.email.split('@')[0]}</div>
+            <button id="logout-btn" class="w-full text-left p-2 hover:bg-slate-600 rounded-lg" data-i18n-key="logout">Sair</button>
+        `;
         document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
     } else {
+        profileDropdown.innerHTML = `
+            <button id="login-btn-main" class="w-full text-left p-2 hover:bg-slate-600 rounded-lg" data-i18n-key="login_register">
+                Fazer Login / Cadastrar
+            </button>
+        `;
         document.getElementById('login-btn-main')?.addEventListener('click', () => authModal.classList.add('is-open'));
     }
 }
@@ -814,6 +804,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('lang-switcher-btn')?.addEventListener('click', () => {
         const newLang = currentLanguage === 'pt' ? 'en' : 'pt';
         setLanguage(newLang);
+    });
+
+    // Profile Dropdown
+    const profileBtn = document.getElementById('profile-btn');
+    const profileDropdown = document.getElementById('profile-dropdown');
+
+    profileBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileDropdown.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
+            profileDropdown.classList.add('hidden');
+        }
     });
 
     // Modal PIX

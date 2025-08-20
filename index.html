@@ -45,7 +45,16 @@
     </div>
   </div>
 
-  <div id="user-session-display" class="fixed top-4 right-4 z-50 flex items-center gap-4"></div>
+  <div id="user-session-display" class="fixed top-4 right-4 z-50 flex items-center gap-4">
+    <div class="relative">
+      <button id="profile-btn" class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-white">
+        <i class="fa-solid fa-user"></i>
+      </button>
+      <div id="profile-dropdown" class="absolute top-12 right-0 bg-slate-700 rounded-lg shadow-lg p-2 w-48 hidden">
+        <!-- Dropdown content will be added by script.js -->
+      </div>
+    </div>
+  </div>
 
   <main class="flex-grow p-4 md:p-6 pb-32 flex items-center min-h-screen">
     <div class="w-full max-w-md mx-auto flex flex-col items-center">
