@@ -107,21 +107,40 @@ async function checkUser() {
 
 function updateUIForUser() {
     const profileDropdown = document.getElementById('profile-dropdown');
+    let dropdownContent = '';
 
     if (user) {
-        profileDropdown.innerHTML = `
+        dropdownContent += `
             <div class="p-2 text-white" data-i18n-key="greeting" data-i18n-params='{"name": "${user.email.split('@')[0]}"}'>Olá, ${user.email.split('@')[0]}</div>
             <button id="logout-btn" class="w-full text-left p-2 hover:bg-slate-600 rounded-lg" data-i18n-key="logout">Sair</button>
         `;
-        document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
     } else {
-        profileDropdown.innerHTML = `
+        dropdownContent += `
             <button id="login-btn-main" class="w-full text-left p-2 hover:bg-slate-600 rounded-lg" data-i18n-key="login_register">
                 Fazer Login / Cadastrar
             </button>
         `;
+    }
+
+    dropdownContent += `
+        <button id="lang-switcher-btn" class="w-full text-left p-2 hover:bg-slate-600 rounded-lg mt-2 border-t border-slate-600">
+            ${currentLanguage === 'pt' ? 'Switch to English' : 'Mudar para Português'}
+        </button>
+    `;
+
+    profileDropdown.innerHTML = dropdownContent;
+
+    if (user) {
+        document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
+    } else {
         document.getElementById('login-btn-main')?.addEventListener('click', () => authModal.classList.add('is-open'));
     }
+
+    // Re-attach event listener for language switcher
+    document.getElementById('lang-switcher-btn')?.addEventListener('click', () => {
+        const newLang = currentLanguage === 'pt' ? 'en' : 'pt';
+        setLanguage(newLang);
+    });
 }
 
 async function handleLogin(e) {
@@ -479,9 +498,17 @@ function setLanguage(lang) {
                 el.placeholder = text;
             }
         } else {
-            el.textContent = text;
+            if (el.id !== 'cycles-count-display') { // Não sobrescrever o número
+                el.textContent = text;
+            }
         }
     });
+
+    // Handle the special case of the cycle counter
+    const cyclesCompletedTextElement = document.querySelector('[data-i18n-id="cycles-completed-text"] [data-i18n-key="cycles_completed"]');
+    if (cyclesCompletedTextElement) {
+        cyclesCompletedTextElement.textContent = translations[lang]['cycles_completed'] || 'Ciclos Completos:';
+    }
 
     // Since some dynamic elements might be re-rendered, let's re-translate them specifically
     updateModeDisplay();
@@ -632,6 +659,9 @@ function startTimer() {
             if (currentMode === 'focus') {
                 currentCycleCount++;
                 cyclesCountDisplay.textContent = currentCycleCount;
+                // Atualiza o texto do contador de ciclos
+                const cyclesCompletedText = translations[currentLanguage]['cycles_completed'] || 'Ciclos Completos:';
+                cyclesCountDisplay.parentElement.textContent = `${cyclesCompletedText} ${currentCycleCount}`;
                 setMode(currentCycleCount % cyclesBeforeLongBreak === 0 ? 'longBreak' : 'shortBreak');
                 playSound(notificationSound);
             } else {
