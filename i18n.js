@@ -12,6 +12,11 @@ const translations = {
         'delete': 'Excluir',
         'confirm_delete_title': 'Confirmar Exclusão',
         'confirm_delete_text': 'Você tem certeza que quer excluir este evento?',
+        'ranking': 'Ranking',
+        'no_ranking_data': 'Nenhum dado de ranking ainda.',
+        'ranking_error': 'Não foi possível carregar o ranking.',
+        'cycles': 'ciclos',
+        'hours': 'horas',
 
         // Pomodoro
         'focus_mode': 'Modo Foco',
@@ -74,6 +79,11 @@ const translations = {
         'delete': 'Delete',
         'confirm_delete_title': 'Confirm Deletion',
         'confirm_delete_text': 'Are you sure you want to delete this event?',
+        'ranking': 'Ranking',
+        'no_ranking_data': 'No ranking data yet.',
+        'ranking_error': 'Could not load the ranking.',
+        'cycles': 'cycles',
+        'hours': 'hours',
 
         // Pomodoro
         'focus_mode': 'Focus Mode',

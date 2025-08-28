@@ -123,6 +123,7 @@ function updateUIForUser() {
     }
 
     dropdownContent += `
+        <button id="ranking-btn" class="w-full text-left p-2 hover:bg-slate-600 rounded-lg mt-2 border-t border-slate-600" data-i18n-key="ranking">Ranking</button>
         <button id="lang-switcher-btn" class="w-full text-left p-2 hover:bg-slate-600 rounded-lg mt-2 border-t border-slate-600">
             ${currentLanguage === 'pt' ? 'Switch to English' : 'Mudar para Português'}
         </button>
@@ -140,6 +141,21 @@ function updateUIForUser() {
     document.getElementById('lang-switcher-btn')?.addEventListener('click', () => {
         const newLang = currentLanguage === 'pt' ? 'en' : 'pt';
         setLanguage(newLang);
+    });
+
+    // Ranking Modal
+    const rankingModal = document.getElementById('ranking-modal');
+    const closeRankingBtn = document.getElementById('close-ranking-btn');
+
+    document.getElementById('ranking-btn')?.addEventListener('click', () => {
+        rankingModal.classList.remove('hidden');
+        rankingModal.classList.add('flex');
+        fetchAndDisplayRanking();
+    });
+
+    closeRankingBtn?.addEventListener('click', () => {
+        rankingModal.classList.add('hidden');
+        rankingModal.classList.remove('flex');
     });
 }
 
@@ -217,6 +233,49 @@ async function loadUpcomingEvents() {
     } catch (error) {
         console.error("Erro ao carregar eventos:", error);
         upcomingEventsList.innerHTML = '<p class="text-red-500">Não foi possível carregar os eventos.</p>';
+    }
+}
+
+async function updateUserProfile(focusedSeconds) {
+    if (!user) return;
+
+    try {
+        // 1. Pega o perfil atual
+        const { data: profile, error: profileError } = await _supabase
+            .from('profiles')
+            .select('completed_cycles, total_focus_seconds')
+            .eq('id', user.id)
+            .single();
+
+        if (profileError) {
+            // Se o perfil não existir, pode ser um usuário antigo. Podemos criar um aqui.
+            if (profileError.code === 'PGRST116') {
+                 await _supabase.from('profiles').insert([{
+                    id: user.id,
+                    username: user.email.split('@')[0],
+                    completed_cycles: 1,
+                    total_focus_seconds: focusedSeconds
+                }]);
+            } else {
+                throw profileError;
+            }
+        } else {
+            // 2. Atualiza o perfil
+            const updatedCycles = (profile.completed_cycles || 0) + 1;
+            const updatedSeconds = (profile.total_focus_seconds || 0) + focusedSeconds;
+
+            const { error: updateError } = await _supabase
+                .from('profiles')
+                .update({
+                    completed_cycles: updatedCycles,
+                    total_focus_seconds: updatedSeconds
+                })
+                .eq('id', user.id);
+
+            if (updateError) throw updateError;
+        }
+    } catch (err) {
+        console.error("Erro ao atualizar o perfil:", err);
     }
 }
 
@@ -369,6 +428,48 @@ async function handleDeleteEvent(eventId) {
             console.error("Erro ao excluir evento:", err);
             alert("Não foi possível excluir o evento.");
         }
+    }
+}
+
+async function fetchAndDisplayRanking() {
+    try {
+        const { data, error } = await _supabase
+            .from('profiles')
+            .select('username, completed_cycles, total_focus_seconds')
+            .order('completed_cycles', { ascending: false })
+            .limit(10); // Pega o Top 10
+
+        if (error) throw error;
+
+        const rankingList = document.getElementById('ranking-list');
+        rankingList.innerHTML = ''; // Limpa a lista
+
+        if (data.length === 0) {
+            rankingList.innerHTML = `<p class="text-center text-gray-400" data-i18n-key="no_ranking_data">Nenhum dado de ranking ainda.</p>`;
+            return;
+        }
+
+        data.forEach((profile, index) => {
+            const hours = (profile.total_focus_seconds / 3600).toFixed(1);
+            const rank = index + 1;
+            const rankEl = document.createElement('div');
+            rankEl.className = 'flex items-center justify-between p-3 rounded-lg bg-slate-700';
+            rankEl.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <span class="font-bold text-lg w-8 text-center">${rank}</span>
+                    <span class="font-semibold">${profile.username || 'Anônimo'}</span>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-indigo-400">${profile.completed_cycles} <span data-i18n-key="cycles">ciclos</span></p>
+                    <p class="text-sm text-slate-400">${hours} <span data-i18n-key="hours">horas</span></p>
+                </div>
+            `;
+            rankingList.appendChild(rankEl);
+        });
+    } catch (err) {
+        console.error("Erro ao buscar o ranking:", err);
+        const rankingList = document.getElementById('ranking-list');
+        rankingList.innerHTML = `<p class="text-center text-red-500" data-i18n-key="ranking_error">Não foi possível carregar o ranking.</p>`;
     }
 }
 
@@ -659,7 +760,10 @@ function startTimer() {
             if (currentMode === 'focus') {
                 currentCycleCount++;
                 cyclesCountDisplay.textContent = currentCycleCount;
-                // Atualiza o texto do contador de ciclos
+
+                // Atualiza o perfil do usuário no Supabase
+                updateUserProfile(focusDuration);
+
                 const cyclesCompletedText = translations[currentLanguage]['cycles_completed'] || 'Ciclos Completos:';
                 cyclesCountDisplay.parentElement.textContent = `${cyclesCompletedText} ${currentCycleCount}`;
                 setMode(currentCycleCount % cyclesBeforeLongBreak === 0 ? 'longBreak' : 'shortBreak');
