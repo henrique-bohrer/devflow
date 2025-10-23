@@ -651,9 +651,24 @@ function navigatePresets(direction) {
     updatePresetDisplay(false, direction);
 }
 
+const musicStations = {
+    'lofi': { name: 'Rádio Lo-Fi', url: 'https://lofi.stream.laut.fm/lofi' },
+    'trap': { name: 'Rádio Trap', url: 'https://trap.stream.laut.fm/trap' },
+    'rap': { name: 'Rádio Rap', url: 'https://rap.stream.laut.fm/rap' },
+    'sertanejo': { name: 'Rádio Sertanejo', url: 'https://sertanejo.stream.laut.fm/sertanejo' },
+    'gaucha': { name: 'Rádio Gaúcha', url: 'https://cast4.audiostream.com.br:2655/mp3' },
+};
+
+function getCurrentStation() {
+    return localStorage.getItem('pomodoroMusicStation') || 'lofi';
+}
+
 function setupRadioPlayer() {
-    localAudioPlayer.src = 'https://lofi.stream.laut.fm/lofi';
-    playerCurrentTrackName.textContent = 'Rádio Lo-Fi';
+    const currentStationKey = getCurrentStation();
+    const station = musicStations[currentStationKey];
+    localAudioPlayer.src = station.url;
+    playerCurrentTrackName.textContent = station.name;
+    document.getElementById('music-category-select').value = currentStationKey;
 }
 
 function toggleMusicPlayer() {
@@ -894,6 +909,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Player
     playerPlayPauseBtn?.addEventListener('click', toggleMusicPlayer);
+    document.getElementById('music-category-select')?.addEventListener('change', (e) => {
+        const stationKey = e.target.value;
+        localStorage.setItem('pomodoroMusicStation', stationKey);
+        const station = musicStations[stationKey];
+        localAudioPlayer.src = station.url;
+        playerCurrentTrackName.textContent = station.name;
+        if (!localAudioPlayer.paused) {
+            localAudioPlayer.load();
+            localAudioPlayer.play();
+        }
+    });
     localAudioPlayer?.addEventListener('play', () => playPauseIconContainer.innerHTML = `<i class="fa-solid fa-pause fa-lg"></i>`);
     localAudioPlayer?.addEventListener('pause', () => playPauseIconContainer.innerHTML = `<i class="fa-solid fa-play fa-lg"></i>`);
     playerVolumeSlider?.addEventListener('input', () => {
