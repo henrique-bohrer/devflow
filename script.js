@@ -657,6 +657,7 @@ const musicStations = {
     'rap': { name: 'Rádio Rap', url: 'https://rap.stream.laut.fm/rap' },
     'sertanejo': { name: 'Rádio Sertanejo', url: 'https://sertanejo.stream.laut.fm/sertanejo' },
     'gaucha': { name: 'Rádio Gaúcha', url: 'https://cast4.audiostream.com.br:2655/mp3' },
+    'minecraft': { name: 'Rádio MinecraftOnline', url: 'http://radio.minecraftonline.com:8000/stream' },
 };
 
 function getCurrentStation() {
