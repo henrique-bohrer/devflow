@@ -655,9 +655,9 @@ const musicStations = {
     'lofi': { name: 'Rádio Lo-Fi', url: 'https://lofi.stream.laut.fm/lofi' },
     'trap': { name: 'Rádio Trap', url: 'https://trap.stream.laut.fm/trap' },
     'rap': { name: 'Rádio Rap', url: 'https://rap.stream.laut.fm/rap' },
-    'sertanejo': { name: 'Rádio Sertanejo', url: 'https://sertanejo.stream.laut.fm/sertanejo' },
+    'hoodtrap': { name: 'Hoodtrap', url: 'https://stream.zeno.fm/e0cbypaxvchvv' },
     'gaucha': { name: 'Rádio Gaúcha', url: 'https://cast4.audiostream.com.br:2655/mp3' },
-    'minecraft': { name: 'Rádio MinecraftOnline', url: 'http://radio.minecraftonline.com:8000/stream' },
+    'radiohead': { name: 'Radiohead', url: 'https://streaming.exclusive.radio/er/radiohead/icecast.audio' },
 };
 
 function getCurrentStation() {
