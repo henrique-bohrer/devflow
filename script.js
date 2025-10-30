@@ -665,11 +665,24 @@ function getCurrentStation() {
 }
 
 function setupRadioPlayer() {
+    const musicCategorySelect = document.getElementById('music-category-select');
+
+    // Clear existing options
+    musicCategorySelect.innerHTML = '';
+
+    // Populate options from musicStations object
+    for (const key in musicStations) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = musicStations[key].name;
+        musicCategorySelect.appendChild(option);
+    }
+
     const currentStationKey = getCurrentStation();
     const station = musicStations[currentStationKey];
     localAudioPlayer.src = station.url;
     playerCurrentTrackName.textContent = station.name;
-    document.getElementById('music-category-select').value = currentStationKey;
+    musicCategorySelect.value = currentStationKey;
 }
 
 function toggleMusicPlayer() {
@@ -910,7 +923,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Player
     playerPlayPauseBtn?.addEventListener('click', toggleMusicPlayer);
-    document.getElementById('music-category-select')?.addEventListener('change', (e) => {
+
+    const musicCategorySelect = document.getElementById('music-category-select');
+    const playerPrevBtn = document.getElementById('player-prev-btn');
+    const playerNextBtn = document.getElementById('player-next-btn');
+
+    musicCategorySelect?.addEventListener('change', (e) => {
         const stationKey = e.target.value;
         localStorage.setItem('pomodoroMusicStation', stationKey);
         const station = musicStations[stationKey];
@@ -921,6 +939,29 @@ document.addEventListener('DOMContentLoaded', () => {
             localAudioPlayer.play();
         }
     });
+
+    const changeStation = (direction) => {
+        const stationKeys = Object.keys(musicStations);
+        const currentStationKey = musicCategorySelect.value;
+        let currentIndex = stationKeys.indexOf(currentStationKey);
+
+        currentIndex += direction;
+
+        if (currentIndex < 0) {
+            currentIndex = stationKeys.length - 1;
+        } else if (currentIndex >= stationKeys.length) {
+            currentIndex = 0;
+        }
+
+        const newStationKey = stationKeys[currentIndex];
+        musicCategorySelect.value = newStationKey;
+
+        // Trigger the change event to update the player
+        musicCategorySelect.dispatchEvent(new Event('change'));
+    };
+
+    playerPrevBtn?.addEventListener('click', () => changeStation(-1));
+    playerNextBtn?.addEventListener('click', () => changeStation(1));
     localAudioPlayer?.addEventListener('play', () => playPauseIconContainer.innerHTML = `<i class="fa-solid fa-pause fa-lg"></i>`);
     localAudioPlayer?.addEventListener('pause', () => playPauseIconContainer.innerHTML = `<i class="fa-solid fa-play fa-lg"></i>`);
     playerVolumeSlider?.addEventListener('input', () => {
