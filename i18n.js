@@ -71,6 +71,14 @@ const translations = {
         'ai_api_key_help': 'Obtenha gratuitamente em: ',
         'ai_api_key_saved': 'Chave salva com sucesso!',
         'ai_api_key_error': 'Chave inválida. Verifique e tente novamente.',
+        'ai_provider_label': 'Provedor de IA',
+        'ai_provider_gemini': 'Google Gemini (Requer Chave)',
+        'ai_provider_pollinations': 'Pollinations.ai (Grátis - Sem Chave)',
+        'ai_model_label': 'Modelo (Pollinations)',
+        'ai_model_gpt4o': 'GPT-4o',
+        'ai_model_claude': 'Claude 3.5 Sonnet',
+        'ai_model_midjourney': 'Midjourney (Imagem)',
+        'ai_model_flux': 'Flux (Imagem)',
     },
     'en': {
         // General
@@ -143,5 +151,13 @@ const translations = {
         'ai_api_key_help': 'Get it for free at: ',
         'ai_api_key_saved': 'Key saved successfully!',
         'ai_api_key_error': 'Invalid key. Check and try again.',
+        'ai_provider_label': 'AI Provider',
+        'ai_provider_gemini': 'Google Gemini (Key Required)',
+        'ai_provider_pollinations': 'Pollinations.ai (Free - No Key)',
+        'ai_model_label': 'Model (Pollinations)',
+        'ai_model_gpt4o': 'GPT-4o',
+        'ai_model_claude': 'Claude 3.5 Sonnet',
+        'ai_model_midjourney': 'Midjourney (Image)',
+        'ai_model_flux': 'Flux (Image)',
     }
 };

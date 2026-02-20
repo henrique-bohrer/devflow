@@ -77,6 +77,10 @@ const closeAiSettingsBtn = document.getElementById('close-ai-settings-btn');
 const aiApiKeyInput = document.getElementById('ai-api-key-input');
 const saveAiKeyBtn = document.getElementById('save-ai-key-btn');
 const aiKeyStatus = document.getElementById('ai-key-status');
+const aiProviderSelect = document.getElementById('ai-provider-select');
+const geminiKeyContainer = document.getElementById('gemini-key-container');
+const pollinationsModelContainer = document.getElementById('pollinations-model-container');
+const pollinationsModelSelect = document.getElementById('pollinations-model-select');
 
 
 // --- VARIÁVEIS DE ESTADO ---
@@ -877,8 +881,51 @@ async function callGeminiAPI(prompt) {
         const data = await response.json();
         return data.candidates[0].content.parts[0].text;
     } catch (error) {
-        console.error("Erro na chamada da API:", error);
+        console.error("Erro na chamada da API Gemini:", error);
         return "Não foi possível conectar à IA. Verifique sua conexão.";
+    }
+}
+
+async function callPollinationsAPI(prompt) {
+    const model = localStorage.getItem('pollinationsModel') || 'openai';
+
+    // Tratamento especial para modelos de imagem
+    if (model === 'midjourney' || model === 'flux') {
+        const encodedPrompt = encodeURIComponent(prompt);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}`;
+        // Retorna um HTML com a imagem para ser inserido no chat
+        return `<img src="${imageUrl}" alt="Imagem gerada: ${prompt}" class="rounded-lg shadow-md max-w-full h-auto mt-2">`;
+    }
+
+    // Tratamento para modelos de texto
+    const API_URL = `https://text.pollinations.ai/`;
+    // Usa POST para garantir melhor compatibilidade com prompts longos e caracteres especiais
+    const requestBody = {
+        messages: [
+            { role: 'system', content: 'Você é um assistente útil, amigável e especialista em produtividade e programação. Responda sempre em Português do Brasil, a menos que solicitado o contrário.' },
+            { role: 'user', content: prompt }
+        ],
+        model: model,
+        seed: Math.floor(Math.random() * 1000000) // Random seed para variedade
+    };
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Pollinations API Error: ${response.status}`);
+        }
+
+        const text = await response.text();
+        return text;
+
+    } catch (error) {
+        console.error("Erro na chamada da API Pollinations:", error);
+        return "Não foi possível conectar ao Pollinations.ai. Tente novamente mais tarde.";
     }
 }
 
@@ -888,13 +935,29 @@ async function handleChatSubmit(e) {
     if (!userInput) return;
     addMessageToChat('user', userInput);
     chatInput.value = '';
+
     addMessageToChat('ai', 'typing');
-    const aiResponse = await callGeminiAPI(userInput);
+
+    let aiResponse;
+    const provider = localStorage.getItem('aiProvider') || 'gemini';
+
+    if (provider === 'pollinations') {
+        aiResponse = await callPollinationsAPI(userInput);
+    } else {
+        aiResponse = await callGeminiAPI(userInput);
+    }
+
     document.getElementById('typing-indicator')?.remove();
-    addMessageToChat('ai', aiResponse);
+
+    // Verifica se a resposta contém HTML (imagem) ou texto puro
+    if (aiResponse.trim().startsWith('<img')) {
+        addMessageToChat('ai', aiResponse, true); // true indica que é HTML
+    } else {
+        addMessageToChat('ai', aiResponse);
+    }
 }
 
-function addMessageToChat(sender, message) {
+function addMessageToChat(sender, message, isHtml = false) {
     if (!chatMessages) return;
     const messageElement = document.createElement('div');
     messageElement.className = `chat-message ${sender}`;
@@ -902,7 +965,11 @@ function addMessageToChat(sender, message) {
         messageElement.innerHTML = '<div class="typing-indicator"><span></span></div>';
         messageElement.id = 'typing-indicator';
     } else {
-        messageElement.textContent = message;
+        if (isHtml) {
+            messageElement.innerHTML = message;
+        } else {
+            messageElement.textContent = message;
+        }
     }
     chatMessages.appendChild(messageElement);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -1030,6 +1097,31 @@ document.addEventListener('DOMContentLoaded', () => {
         aiSettingsModal.classList.add('flex');
         const storedKey = localStorage.getItem('geminiApiKey');
         if (storedKey) aiApiKeyInput.value = storedKey;
+
+        // Load saved provider
+        const savedProvider = localStorage.getItem('aiProvider') || 'gemini';
+        aiProviderSelect.value = savedProvider;
+
+        // Load saved model
+        const savedModel = localStorage.getItem('pollinationsModel') || 'openai';
+        pollinationsModelSelect.value = savedModel;
+
+        // Update UI visibility
+        updateAiSettingsUI(savedProvider);
+    });
+
+    function updateAiSettingsUI(provider) {
+        if (provider === 'gemini') {
+            geminiKeyContainer.classList.remove('hidden');
+            pollinationsModelContainer.classList.add('hidden');
+        } else {
+            geminiKeyContainer.classList.add('hidden');
+            pollinationsModelContainer.classList.remove('hidden');
+        }
+    }
+
+    aiProviderSelect?.addEventListener('change', (e) => {
+        updateAiSettingsUI(e.target.value);
     });
 
     closeAiSettingsBtn?.addEventListener('click', () => {
@@ -1039,21 +1131,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     saveAiKeyBtn?.addEventListener('click', () => {
-        const newKey = aiApiKeyInput.value.trim();
-        if (newKey) {
-            localStorage.setItem('geminiApiKey', newKey);
-            aiKeyStatus.textContent = translations[currentLanguage]['ai_api_key_saved'] || 'Chave salva!';
-            aiKeyStatus.className = 'text-sm text-center font-medium h-5 text-green-400';
-            setTimeout(() => {
-                aiSettingsModal.classList.add('hidden');
-                aiSettingsModal.classList.remove('flex');
-                aiKeyStatus.textContent = '';
-            }, 1500);
+        const provider = aiProviderSelect.value;
+        const model = pollinationsModelSelect.value;
+        localStorage.setItem('aiProvider', provider);
+        localStorage.setItem('pollinationsModel', model);
+
+        if (provider === 'gemini') {
+            const newKey = aiApiKeyInput.value.trim();
+            if (newKey) {
+                localStorage.setItem('geminiApiKey', newKey);
+                aiKeyStatus.textContent = translations[currentLanguage]['ai_api_key_saved'] || 'Chave salva!';
+                aiKeyStatus.className = 'text-sm text-center font-medium h-5 text-green-400';
+            } else {
+                 localStorage.removeItem('geminiApiKey');
+                 aiKeyStatus.textContent = 'Chave removida.';
+                 aiKeyStatus.className = 'text-sm text-center font-medium h-5 text-yellow-400';
+            }
         } else {
-             localStorage.removeItem('geminiApiKey'); // Permite limpar a chave
-             aiKeyStatus.textContent = 'Chave removida.';
-             aiKeyStatus.className = 'text-sm text-center font-medium h-5 text-yellow-400';
+            // For Pollinations, just confirm save
+            aiKeyStatus.textContent = 'Configurações salvas!';
+            aiKeyStatus.className = 'text-sm text-center font-medium h-5 text-green-400';
         }
+
+        setTimeout(() => {
+            aiSettingsModal.classList.add('hidden');
+            aiSettingsModal.classList.remove('flex');
+            aiKeyStatus.textContent = '';
+        }, 1500);
     });
 
 

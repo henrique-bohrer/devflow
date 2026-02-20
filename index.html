@@ -383,6 +383,27 @@
       </div>
       <div class="space-y-4">
         <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2" data-i18n-key="ai_provider_label">Provedor de
+            IA</label>
+          <select id="ai-provider-select"
+            class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white text-sm">
+            <option value="gemini" data-i18n-key="ai_provider_gemini">Google Gemini (Requer Chave)</option>
+            <option value="pollinations" data-i18n-key="ai_provider_pollinations">Pollinations.ai (Grátis - Sem Chave)
+            </option>
+          </select>
+        </div>
+
+        <div id="pollinations-model-container" class="hidden">
+           <label class="block text-sm font-medium text-slate-300 mb-2" data-i18n-key="ai_model_label">Modelo</label>
+           <select id="pollinations-model-select" class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white text-sm">
+              <option value="openai" data-i18n-key="ai_model_gpt4o">GPT-4o (OpenAI)</option>
+              <option value="claude" data-i18n-key="ai_model_claude">Claude 3.5 Sonnet</option>
+              <option value="midjourney" data-i18n-key="ai_model_midjourney">Midjourney (Imagem)</option>
+              <option value="flux" data-i18n-key="ai_model_flux">Flux (Imagem)</option>
+           </select>
+        </div>
+
+        <div id="gemini-key-container">
           <label class="block text-sm font-medium text-slate-300 mb-2" data-i18n-key="ai_api_key_label">Chave da API
             (Gemini)</label>
           <input type="text" id="ai-api-key-input" placeholder="Cole sua chave aqui (AIza...)"
@@ -393,7 +414,8 @@
               class="text-indigo-400 hover:underline">Google AI Studio</a>
           </p>
         </div>
-        <button id="save-ai-key-btn" class="btn w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
+        <button id="save-ai-key-btn"
+          class="btn w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
           data-i18n-key="save">Salvar</button>
         <p id="ai-key-status" class="text-sm text-center font-medium h-5"></p>
       </div>
