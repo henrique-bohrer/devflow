@@ -862,13 +862,17 @@ async function callGeminiAPI(prompt) {
         });
         if (!response.ok) {
             const errorData = await response.json();
+            const errorMessage = errorData?.error?.message || '';
+
+            if (errorMessage.includes('Quota exceeded') || response.status === 429) {
+                return `Limite de requisições excedido. A chave gratuita do Gemini tem um limite por minuto. Tente novamente em alguns instantes.`;
+            }
+
             if (response.status === 400 || response.status === 403) {
                 return `Erro de autenticação. Verifique sua chave de API nas configurações ⚙️.`;
             }
-            if (response.status === 429) {
-                return `Limite de requisições excedido. Tente novamente mais tarde ou use outra chave.`;
-            }
-            return `Ocorreu um erro: ${errorData.error.message || response.statusText}`;
+
+            return `Ocorreu um erro: ${errorMessage || response.statusText}`;
         }
         const data = await response.json();
         return data.candidates[0].content.parts[0].text;
