@@ -857,7 +857,7 @@ async function callGeminiAPI(prompt) {
     const storedKey = localStorage.getItem('geminiApiKey');
     const apiKey = (storedKey && storedKey.trim() !== '') ? storedKey : GEMINI_API_KEY;
 
-    if (!apiKey || apiKey === "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") {
+    if (!apiKey || apiKey === "AIzaSyBsmI1Yw9WSBUBufixzBllQRChmvJmE-A4") {
         return "Por favor, configure sua chave de API clicando no ícone de engrenagem ⚙️ acima.";
     }
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
