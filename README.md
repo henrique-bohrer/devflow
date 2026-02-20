@@ -84,6 +84,18 @@ Abra seu navegador e acesse: https://devflow-pomodoro.netlify.app/
 
 O projeto agora deve estar funcionando completamente em sua máquina local!
 
+🤖 Configurando a Inteligência Artificial (Gemini)
+Para utilizar o assistente virtual (o tomatinho no canto superior direito), você precisará de uma chave de API do Google Gemini. É gratuito e fácil de configurar:
+
+1. Acesse o Google AI Studio: https://aistudio.google.com/app/apikey
+2. Faça login com sua conta Google.
+3. Clique em "Create API key" (Criar chave de API).
+4. Copie a chave gerada (começa com "AIza...").
+5. No DevFlow Pomodoro, abra o chat da IA e clique no ícone de engrenagem ⚙️.
+6. Cole sua chave e clique em Salvar.
+
+Pronto! A IA agora responderá suas perguntas sobre produtividade, código ou qualquer outro assunto.
+
 📁 Estrutura de Arquivos
 /
 |-- api/
