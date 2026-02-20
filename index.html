@@ -66,16 +66,6 @@
 
       <section id="pomodoro-section"
         class="relative w-full bg-slate-800 p-4 sm:p-8 rounded-2xl shadow-2xl border border-slate-700">
-        <div id="ai-assistant-container" class="absolute top-4 right-4 z-10 group">
-          <button id="ai-assistant-btn" class="w-12 h-12 transition-transform hover:scale-110">
-            <img src="icone.png" alt="Assistente IA" class="w-full h-full object-contain">
-          </button>
-          <div
-            class="ai-tooltip absolute -bottom-14 -right-2 w-48 bg-slate-700 border border-slate-600 rounded-lg p-3 text-center text-sm text-slate-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-            <p class="ai-tooltip-text" data-i18n-key="ai_tooltip">Sabia que esse tomatinho é uma IA? <i
-                class="fa-regular fa-hand-point-up"></i></p>
-          </div>
-        </div>
         <h2 id="current-mode-display"
           class="text-xl sm:text-2xl font-semibold mb-4 text-center text-indigo-400 transition-colors duration-300"
           data-i18n-key="focus_mode">Modo
@@ -323,39 +313,6 @@
       </div>
     </div>
   </div>
-  <div id="ai-chat-window"
-    class="fixed bottom-28 left-6 w-96 max-w-[90vw] bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 z-50 flex flex-col">
-    <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b border-slate-700 flex-shrink-0">
-      <div class="flex items-center gap-2">
-        <h4 class="text-lg font-semibold text-white" data-i18n-key="ai_chat_title">Assistente IA</h4>
-        <button id="ai-settings-btn"
-          class="h-6 w-6 rounded-full hover:bg-slate-700 text-slate-400 hover:text-indigo-400 flex items-center justify-center transition-colors"
-          title="Configurar API Key">
-          <i class="fa-solid fa-gear"></i>
-        </button>
-      </div>
-      <button id="close-chat-btn"
-        class="h-8 w-8 rounded-full hover:bg-slate-700 text-slate-400 flex items-center justify-center transition-colors">
-        <i class="fa-solid fa-times"></i>
-      </button>
-    </div>
-    <!-- Messages Area -->
-    <div id="chat-messages" class="flex-grow p-4 overflow-y-auto custom-scrollbar space-y-4 h-64">
-      <!-- Messages will be added here by JS -->
-    </div>
-    <!-- Input Form -->
-    <div class="p-4 border-t border-slate-700 flex-shrink-0">
-      <form id="chat-form" class="flex items-center gap-3">
-        <input type="text" id="chat-input" placeholder="Pergunte algo..." data-i18n-key="ai_chat_placeholder"
-          class="flex-grow p-2 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-        <button type="submit"
-          class="btn h-10 w-10 flex-shrink-0 bg-indigo-600 rounded-lg flex items-center justify-center">
-          <i class="fa-solid fa-paper-plane"></i>
-        </button>
-      </form>
-    </div>
-  </div>
   <div id="social-links-container" class="fixed bottom-44 right-9 flex flex-col items-center space-y-4"></div>
 
   <div id="ranking-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] items-center justify-center hidden">
@@ -372,78 +329,7 @@
     </div>
   </div>
 
-  <div id="ai-settings-modal"
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] items-center justify-center hidden">
-    <div class="bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-8 border border-slate-700">
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-xl font-bold text-white" data-i18n-key="ai_settings_title">Configurações da IA</h3>
-        <button id="close-ai-settings-btn" class="text-gray-400 hover:text-white">
-          <i class="fa-solid fa-times fa-lg"></i>
-        </button>
-      </div>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-2" data-i18n-key="ai_provider_label">Provedor de
-            IA</label>
-          <select id="ai-provider-select"
-            class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white text-sm">
-            <option value="gemini" data-i18n-key="ai_provider_gemini">Google Gemini (Requer Chave)</option>
-            <option value="groq" data-i18n-key="ai_provider_groq">Groq Cloud (Llama 3)</option>
-            <option value="pollinations" data-i18n-key="ai_provider_pollinations">Pollinations.ai (Grátis - Sem Chave)
-            </option>
-          </select>
-        </div>
-
-        <div id="pollinations-model-container" class="hidden">
-           <label class="block text-sm font-medium text-slate-300 mb-2" data-i18n-key="ai_model_label">Modelo</label>
-           <select id="pollinations-model-select" class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white text-sm">
-              <option value="openai" data-i18n-key="ai_model_gpt4o">GPT-4o (OpenAI)</option>
-              <option value="claude" data-i18n-key="ai_model_claude">Claude 3.5 Sonnet</option>
-              <option value="midjourney" data-i18n-key="ai_model_midjourney">Midjourney (Imagem)</option>
-              <option value="flux" data-i18n-key="ai_model_flux">Flux (Imagem)</option>
-           </select>
-        </div>
-
-        <div id="groq-model-container" class="hidden">
-           <label class="block text-sm font-medium text-slate-300 mb-2" data-i18n-key="ai_model_label">Modelo</label>
-           <select id="groq-model-select" class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white text-sm">
-              <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Versatile)</option>
-              <option value="llama-3.1-8b-instant">Llama 3.1 8B (Instant)</option>
-           </select>
-        </div>
-
-        <div id="gemini-key-container">
-          <label class="block text-sm font-medium text-slate-300 mb-2" data-i18n-key="ai_api_key_label">Chave da API
-            (Gemini)</label>
-          <input type="text" id="ai-api-key-input" placeholder="Cole sua chave aqui (AIza...)"
-            class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white text-sm">
-          <p class="text-xs text-slate-400 mt-2">
-            <span data-i18n-key="ai_api_key_help">Obtenha gratuitamente em: </span>
-            <a href="https://aistudio.google.com/app/apikey" target="_blank"
-              class="text-indigo-400 hover:underline">Google AI Studio</a>
-          </p>
-        </div>
-
-        <div id="groq-key-container" class="hidden">
-          <label class="block text-sm font-medium text-slate-300 mb-2" data-i18n-key="ai_api_key_groq_label">Chave da API (Groq)</label>
-          <input type="text" id="groq-api-key-input" placeholder="Cole sua chave aqui (gsk_...)" data-i18n-key="ai_api_key_groq_placeholder"
-            class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white text-sm">
-          <p class="text-xs text-slate-400 mt-2">
-            <span data-i18n-key="ai_api_key_groq_help">Obtenha gratuitamente em: </span>
-            <a href="https://console.groq.com/keys" target="_blank"
-              class="text-indigo-400 hover:underline">Groq Console</a>
-          </p>
-        </div>
-        <button id="save-ai-key-btn"
-          class="btn w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
-          data-i18n-key="save">Salvar</button>
-        <p id="ai-key-status" class="text-sm text-center font-medium h-5"></p>
-      </div>
-    </div>
-  </div>
-
   <script src="i18n.js"></script>
-  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 
