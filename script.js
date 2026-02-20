@@ -81,6 +81,10 @@ const aiProviderSelect = document.getElementById('ai-provider-select');
 const geminiKeyContainer = document.getElementById('gemini-key-container');
 const pollinationsModelContainer = document.getElementById('pollinations-model-container');
 const pollinationsModelSelect = document.getElementById('pollinations-model-select');
+const groqKeyContainer = document.getElementById('groq-key-container');
+const groqApiKeyInput = document.getElementById('groq-api-key-input');
+const groqModelContainer = document.getElementById('groq-model-container');
+const groqModelSelect = document.getElementById('groq-model-select');
 
 
 // --- VARIÁVEIS DE ESTADO ---
@@ -886,6 +890,55 @@ async function callGeminiAPI(prompt) {
     }
 }
 
+async function callGroqAPI(prompt) {
+    const apiKey = localStorage.getItem('groqApiKey');
+    const model = localStorage.getItem('groqModel') || 'llama-3.3-70b-versatile';
+
+    if (!apiKey || apiKey.trim() === '') {
+        return "Por favor, configure sua chave de API da Groq clicando no ícone de engrenagem ⚙️ acima.";
+    }
+
+    const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+    const requestBody = {
+        messages: [
+            { role: 'system', content: 'Você é um assistente útil, amigável e especialista em produtividade e programação. Responda sempre em Português do Brasil.' },
+            { role: 'user', content: prompt }
+        ],
+        model: model
+    };
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Erro Groq:", errorData);
+
+            if (response.status === 401) {
+                return "Erro de autenticação: Chave API inválida. Verifique nas configurações.";
+            }
+            if (response.status === 429) {
+                return "Limite de requisições excedido (Rate Limit) na Groq. Aguarde um momento.";
+            }
+
+            return `Erro na API Groq: ${errorData.error?.message || response.statusText}`;
+        }
+
+        const data = await response.json();
+        return data.choices[0].message.content;
+    } catch (error) {
+        console.error("Erro na chamada da API Groq:", error);
+        return "Não foi possível conectar à Groq. Verifique sua conexão.";
+    }
+}
+
 async function callPollinationsAPI(prompt) {
     const model = localStorage.getItem('pollinationsModel') || 'openai';
 
@@ -943,6 +996,8 @@ async function handleChatSubmit(e) {
 
     if (provider === 'pollinations') {
         aiResponse = await callPollinationsAPI(userInput);
+    } else if (provider === 'groq') {
+        aiResponse = await callGroqAPI(userInput);
     } else {
         aiResponse = await callGeminiAPI(userInput);
     }
@@ -1095,28 +1150,44 @@ document.addEventListener('DOMContentLoaded', () => {
     aiSettingsBtn?.addEventListener('click', () => {
         aiSettingsModal.classList.remove('hidden');
         aiSettingsModal.classList.add('flex');
-        const storedKey = localStorage.getItem('geminiApiKey');
-        if (storedKey) aiApiKeyInput.value = storedKey;
+
+        // Load Gemini Key
+        const storedGeminiKey = localStorage.getItem('geminiApiKey');
+        if (storedGeminiKey) aiApiKeyInput.value = storedGeminiKey;
+
+        // Load Groq Key
+        const storedGroqKey = localStorage.getItem('groqApiKey');
+        if (storedGroqKey) groqApiKeyInput.value = storedGroqKey;
 
         // Load saved provider
         const savedProvider = localStorage.getItem('aiProvider') || 'gemini';
         aiProviderSelect.value = savedProvider;
 
-        // Load saved model
-        const savedModel = localStorage.getItem('pollinationsModel') || 'openai';
-        pollinationsModelSelect.value = savedModel;
+        // Load saved models
+        const savedPollinationsModel = localStorage.getItem('pollinationsModel') || 'openai';
+        pollinationsModelSelect.value = savedPollinationsModel;
+
+        const savedGroqModel = localStorage.getItem('groqModel') || 'llama-3.3-70b-versatile';
+        groqModelSelect.value = savedGroqModel;
 
         // Update UI visibility
         updateAiSettingsUI(savedProvider);
     });
 
     function updateAiSettingsUI(provider) {
+        // Hide all first
+        geminiKeyContainer.classList.add('hidden');
+        pollinationsModelContainer.classList.add('hidden');
+        groqKeyContainer.classList.add('hidden');
+        groqModelContainer.classList.add('hidden');
+
         if (provider === 'gemini') {
             geminiKeyContainer.classList.remove('hidden');
-            pollinationsModelContainer.classList.add('hidden');
-        } else {
-            geminiKeyContainer.classList.add('hidden');
+        } else if (provider === 'pollinations') {
             pollinationsModelContainer.classList.remove('hidden');
+        } else if (provider === 'groq') {
+            groqKeyContainer.classList.remove('hidden');
+            groqModelContainer.classList.remove('hidden');
         }
     }
 
@@ -1132,9 +1203,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveAiKeyBtn?.addEventListener('click', () => {
         const provider = aiProviderSelect.value;
-        const model = pollinationsModelSelect.value;
         localStorage.setItem('aiProvider', provider);
-        localStorage.setItem('pollinationsModel', model);
 
         if (provider === 'gemini') {
             const newKey = aiApiKeyInput.value.trim();
@@ -1147,10 +1216,25 @@ document.addEventListener('DOMContentLoaded', () => {
                  aiKeyStatus.textContent = 'Chave removida.';
                  aiKeyStatus.className = 'text-sm text-center font-medium h-5 text-yellow-400';
             }
-        } else {
-            // For Pollinations, just confirm save
+        } else if (provider === 'pollinations') {
+            const model = pollinationsModelSelect.value;
+            localStorage.setItem('pollinationsModel', model);
             aiKeyStatus.textContent = 'Configurações salvas!';
             aiKeyStatus.className = 'text-sm text-center font-medium h-5 text-green-400';
+        } else if (provider === 'groq') {
+            const newKey = groqApiKeyInput.value.trim();
+            const model = groqModelSelect.value;
+            localStorage.setItem('groqModel', model);
+
+            if (newKey) {
+                localStorage.setItem('groqApiKey', newKey);
+                aiKeyStatus.textContent = translations[currentLanguage]['ai_api_key_saved'] || 'Chave salva!';
+                aiKeyStatus.className = 'text-sm text-center font-medium h-5 text-green-400';
+            } else {
+                localStorage.removeItem('groqApiKey');
+                aiKeyStatus.textContent = 'Chave removida.';
+                aiKeyStatus.className = 'text-sm text-center font-medium h-5 text-yellow-400';
+            }
         }
 
         setTimeout(() => {

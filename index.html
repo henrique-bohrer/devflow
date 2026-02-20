@@ -388,6 +388,7 @@
           <select id="ai-provider-select"
             class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white text-sm">
             <option value="gemini" data-i18n-key="ai_provider_gemini">Google Gemini (Requer Chave)</option>
+            <option value="groq" data-i18n-key="ai_provider_groq">Groq Cloud (Llama 3)</option>
             <option value="pollinations" data-i18n-key="ai_provider_pollinations">Pollinations.ai (Grátis - Sem Chave)
             </option>
           </select>
@@ -403,6 +404,14 @@
            </select>
         </div>
 
+        <div id="groq-model-container" class="hidden">
+           <label class="block text-sm font-medium text-slate-300 mb-2" data-i18n-key="ai_model_label">Modelo</label>
+           <select id="groq-model-select" class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white text-sm">
+              <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Versatile)</option>
+              <option value="llama-3.1-8b-instant">Llama 3.1 8B (Instant)</option>
+           </select>
+        </div>
+
         <div id="gemini-key-container">
           <label class="block text-sm font-medium text-slate-300 mb-2" data-i18n-key="ai_api_key_label">Chave da API
             (Gemini)</label>
@@ -412,6 +421,17 @@
             <span data-i18n-key="ai_api_key_help">Obtenha gratuitamente em: </span>
             <a href="https://aistudio.google.com/app/apikey" target="_blank"
               class="text-indigo-400 hover:underline">Google AI Studio</a>
+          </p>
+        </div>
+
+        <div id="groq-key-container" class="hidden">
+          <label class="block text-sm font-medium text-slate-300 mb-2" data-i18n-key="ai_api_key_groq_label">Chave da API (Groq)</label>
+          <input type="text" id="groq-api-key-input" placeholder="Cole sua chave aqui (gsk_...)" data-i18n-key="ai_api_key_groq_placeholder"
+            class="w-full p-3 bg-slate-700 rounded-lg border border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white text-sm">
+          <p class="text-xs text-slate-400 mt-2">
+            <span data-i18n-key="ai_api_key_groq_help">Obtenha gratuitamente em: </span>
+            <a href="https://console.groq.com/keys" target="_blank"
+              class="text-indigo-400 hover:underline">Groq Console</a>
           </p>
         </div>
         <button id="save-ai-key-btn"
