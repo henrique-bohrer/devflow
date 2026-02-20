@@ -65,6 +65,12 @@ const translations = {
         'ai_tooltip': 'Sabia que esse tomatinho é uma IA?',
         'ai_chat_title': 'Assistente IA',
         'ai_chat_placeholder': 'Pergunte algo...',
+        'ai_settings_title': 'Configurações da IA',
+        'ai_api_key_label': 'Chave da API (Gemini)',
+        'ai_api_key_placeholder': 'Cole sua chave aqui (AIza...)',
+        'ai_api_key_help': 'Obtenha gratuitamente em: ',
+        'ai_api_key_saved': 'Chave salva com sucesso!',
+        'ai_api_key_error': 'Chave inválida. Verifique e tente novamente.',
     },
     'en': {
         // General
@@ -131,5 +137,11 @@ const translations = {
         'ai_tooltip': 'Did you know this little tomato is an AI?',
         'ai_chat_title': 'AI Assistant',
         'ai_chat_placeholder': 'Ask something...',
+        'ai_settings_title': 'AI Settings',
+        'ai_api_key_label': 'API Key (Gemini)',
+        'ai_api_key_placeholder': 'Paste your key here (AIza...)',
+        'ai_api_key_help': 'Get it for free at: ',
+        'ai_api_key_saved': 'Key saved successfully!',
+        'ai_api_key_error': 'Invalid key. Check and try again.',
     }
 };

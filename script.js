@@ -70,6 +70,13 @@ const closeChatBtn = document.getElementById('close-chat-btn');
 const chatMessages = document.getElementById('chat-messages');
 const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('chat-input');
+// ✅ NOVOS ELEMENTOS CONFIGURAÇÃO IA
+const aiSettingsBtn = document.getElementById('ai-settings-btn');
+const aiSettingsModal = document.getElementById('ai-settings-modal');
+const closeAiSettingsBtn = document.getElementById('close-ai-settings-btn');
+const aiApiKeyInput = document.getElementById('ai-api-key-input');
+const saveAiKeyBtn = document.getElementById('save-ai-key-btn');
+const aiKeyStatus = document.getElementById('ai-key-status');
 
 
 // --- VARIÁVEIS DE ESTADO ---
@@ -838,10 +845,14 @@ function updateVolumeSlider() {
 }
 
 async function callGeminiAPI(prompt) {
-    if (typeof GEMINI_API_KEY === 'undefined' || GEMINI_API_KEY === "SUA_CHAVE_DE_API_AQUI") {
-        return "Por favor, configure sua chave de API no arquivo config.js para usar o assistente.";
+    // Tenta pegar a chave do LocalStorage primeiro, depois do config.js
+    const storedKey = localStorage.getItem('geminiApiKey');
+    const apiKey = (storedKey && storedKey.trim() !== '') ? storedKey : GEMINI_API_KEY;
+
+    if (!apiKey || apiKey === "SUA_CHAVE_DE_API_AQUI") {
+        return "Por favor, configure sua chave de API clicando no ícone de engrenagem ⚙️ acima.";
     }
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     const requestBody = { contents: [{ parts: [{ "text": prompt }] }] };
     try {
         const response = await fetch(API_URL, {
@@ -851,12 +862,16 @@ async function callGeminiAPI(prompt) {
         });
         if (!response.ok) {
             const errorData = await response.json();
-            return `Ocorreu um erro: ${errorData.error.message}`;
+            if (response.status === 400 || response.status === 403) {
+                 return `Erro de autenticação. Verifique sua chave de API nas configurações ⚙️.`;
+            }
+            return `Ocorreu um erro: ${errorData.error.message || response.statusText}`;
         }
         const data = await response.json();
         return data.candidates[0].content.parts[0].text;
     } catch (error) {
-        return "Não foi possível conectar à IA.";
+        console.error("Erro na chamada da API:", error);
+        return "Não foi possível conectar à IA. Verifique sua conexão.";
     }
 }
 
@@ -1001,6 +1016,39 @@ document.addEventListener('DOMContentLoaded', () => {
     aiAssistantBtn?.addEventListener('click', () => aiChatWindow.classList.toggle('is-chat-open'));
     closeChatBtn?.addEventListener('click', () => aiChatWindow.classList.remove('is-chat-open'));
     chatForm?.addEventListener('submit', handleChatSubmit);
+
+    // Configuração da IA
+    aiSettingsBtn?.addEventListener('click', () => {
+        aiSettingsModal.classList.remove('hidden');
+        aiSettingsModal.classList.add('flex');
+        const storedKey = localStorage.getItem('geminiApiKey');
+        if (storedKey) aiApiKeyInput.value = storedKey;
+    });
+
+    closeAiSettingsBtn?.addEventListener('click', () => {
+        aiSettingsModal.classList.add('hidden');
+        aiSettingsModal.classList.remove('flex');
+        aiKeyStatus.textContent = ''; // Limpa status
+    });
+
+    saveAiKeyBtn?.addEventListener('click', () => {
+        const newKey = aiApiKeyInput.value.trim();
+        if (newKey) {
+            localStorage.setItem('geminiApiKey', newKey);
+            aiKeyStatus.textContent = translations[currentLanguage]['ai_api_key_saved'] || 'Chave salva!';
+            aiKeyStatus.className = 'text-sm text-center font-medium h-5 text-green-400';
+            setTimeout(() => {
+                aiSettingsModal.classList.add('hidden');
+                aiSettingsModal.classList.remove('flex');
+                aiKeyStatus.textContent = '';
+            }, 1500);
+        } else {
+             localStorage.removeItem('geminiApiKey'); // Permite limpar a chave
+             aiKeyStatus.textContent = 'Chave removida.';
+             aiKeyStatus.className = 'text-sm text-center font-medium h-5 text-yellow-400';
+        }
+    });
+
 
     // I18N
     document.getElementById('lang-switcher-btn')?.addEventListener('click', () => {
