@@ -6,4 +6,4 @@
 // 3. Você pode colar a chave abaixo (não recomendado se for publicar o código)
 //    OU inserir diretamente nas configurações da interface do chat.
 
-const GEMINI_API_KEY = "SUA_CHAVE_DE_API_AQUI";
+const GEMINI_API_KEY = "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";
