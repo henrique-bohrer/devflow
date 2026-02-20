@@ -863,7 +863,10 @@ async function callGeminiAPI(prompt) {
         if (!response.ok) {
             const errorData = await response.json();
             if (response.status === 400 || response.status === 403) {
-                 return `Erro de autenticação. Verifique sua chave de API nas configurações ⚙️.`;
+                return `Erro de autenticação. Verifique sua chave de API nas configurações ⚙️.`;
+            }
+            if (response.status === 429) {
+                return `Limite de requisições excedido. Tente novamente mais tarde ou use outra chave.`;
             }
             return `Ocorreu um erro: ${errorData.error.message || response.statusText}`;
         }
