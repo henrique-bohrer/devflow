@@ -933,12 +933,18 @@ async function startRadioByGenre() {
     confirmGenreBtn.disabled = true;
 
     try {
-        const response = await fetch(`https://de1.api.radio-browser.info/json/stations/search?tag=${encodeURIComponent(genre.toLowerCase())}&limit=10&order=clickcount&reverse=true`);
+        const response = await fetch(`https://de1.api.radio-browser.info/json/stations/search?tag=${encodeURIComponent(genre.toLowerCase())}&limit=30&order=clickcount&reverse=true&hidebroken=true`);
         const stations = await response.json();
 
         if (stations && stations.length > 0) {
-            // Pick the first reliable station
-            const station = stations[0];
+            // Filter for widely supported codecs if possible
+            let validStations = stations.filter(s => s.codec === 'MP3' || s.codec === 'AAC' || s.codec === 'AAC+');
+
+            // Fallback to any station if no MP3/AAC found
+            if (validStations.length === 0) validStations = stations;
+
+            // Pick the first reliable station from the filtered list
+            const station = validStations[0];
             const newStationKey = `custom_${Date.now()}`;
 
             // Adiciona a nova estação à lista e seleciona
@@ -958,6 +964,19 @@ async function startRadioByGenre() {
             // Oculta o modal
             musicSearchModal.classList.add('hidden');
             musicSearchModal.classList.remove('flex');
+
+            // Tenta forçar o play e pega erros
+            try {
+                const playPromise = localAudioPlayer.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {
+                        console.error("Erro ao tocar rádio (provável codec incompatível ou erro de rede):", e);
+                        alert(`A rádio selecionada ("${station.name}") não pôde ser tocada neste navegador ou está offline. Tente pesquisar novamente para encontrar outra.`);
+                    });
+                }
+            } catch (e) {
+                console.error("Erro síncrono no play:", e);
+            }
 
         } else {
             alert(`Nenhuma rádio encontrada para o gênero "${genre}".`);
