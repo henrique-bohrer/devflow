@@ -1,0 +1,21 @@
+{
+  "name": "DevFlow Pomodoro",
+  "short_name": "DevFlow",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#1f4c3b",
+  "theme_color": "#1f4c3b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icone.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icone.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

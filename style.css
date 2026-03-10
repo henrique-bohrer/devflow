@@ -120,7 +120,6 @@ body {
   position: fixed; top: 0; right: 0; width: 100%; max-width: 380px; height: 100%; background-color: var(--bg-main); border-left: 1px solid var(--border-color); box-shadow: -10px 0px 30px rgba(0,0,0,0.2); transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   z-index: 60;
 }
-.task-panel.is-open { transform: translateX(0); }
 
 /* ===== PRESET PICKER ===== */
 .preset-display {
@@ -203,6 +202,8 @@ input[type="range"].player-slider::-moz-range-thumb { width: 16px; height: 16px;
 .hover\:bg-indigo-700:hover { background-color: #b52b17 !important; }
 .bg-red-500 { background-color: var(--accent-primary) !important; }
 .hover\:bg-red-600:hover { background-color: #b52b17 !important; }
+.bg-green-500 { background-color: #22c55e !important; }
+.hover\:bg-green-600:hover { background-color: #16a34a !important; }
 .bg-slate-500 { background-color: var(--text-secondary) !important; color: var(--bg-main) !important; }
 .hover\:bg-slate-600:hover { background-color: #8a9e95 !important; }
 .focus\:ring-indigo-500:focus { --tw-ring-color: var(--accent-secondary) !important; }

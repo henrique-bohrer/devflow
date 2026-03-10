@@ -7,7 +7,9 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = supabase;
 const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Elementos do DOM
+// --- SELEÇÃO DE ELEMENTOS DO DOM ---
+
+// Elementos do Pomodoro, Player, etc. (Mantidos)
 const timerDisplay = document.getElementById('timer-display');
 const startTimerBtn = document.getElementById('start-timer-btn');
 const pauseTimerBtn = document.getElementById('pause-timer-btn');
@@ -29,12 +31,10 @@ const toggleVolumeBtn = document.getElementById('toggle-volume-btn');
 const notificationSound = document.getElementById('notification-sound');
 const breakNotificationSound = document.getElementById('break-notification-sound');
 const warningSound = document.getElementById('warning-sound');
-const taskPanel = document.getElementById('task-panel');
-const toggleTasksBtn = document.getElementById('toggle-tasks-btn');
-const taskForm = document.getElementById('task-form');
-const taskInput = document.getElementById('task-input');
-const taskList = document.getElementById('task-list');
-const tasksContent = document.getElementById('tasks-content');
+const loader = document.getElementById('loader');
+const loaderParagraph = document.getElementById('loader-paragraph');
+
+// Elementos de Autenticação (Mantidos)
 const userSessionDisplay = document.getElementById('user-session-display');
 const authModal = document.getElementById('auth-modal');
 const closeAuthModalBtn = document.getElementById('close-auth-modal-btn');
@@ -44,9 +44,6 @@ const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
 const showRegisterBtn = document.getElementById('show-register-btn');
 const showLoginBtn = document.getElementById('show-login-btn');
-const loader = document.getElementById('loader');
-const loaderParagraph = document.getElementById('loader-paragraph');
-const closeTasksBtn = document.getElementById('close-tasks-btn');
 
 // PIX Modal Elements
 const pixDonationBtn = document.getElementById('pix-donation-btn');
@@ -70,9 +67,9 @@ let timeLeft;
 let currentCycleCount = 0;
 let isPaused = true;
 let currentMode = 'focus';
-let tasks = [];
 let areSoundsUnlocked = false;
 let user = null;
+let eventsCache = []; // Cache para guardar os eventos carregados
 
 const pomodoroPresets = {
     'default': { name: 'Padrão (4x25)', settings: { focusDuration: 25 * 60, shortBreakDuration: 5 * 60, longBreakDuration: 15 * 60, cyclesBeforeLongBreak: 4 } },
@@ -83,18 +80,24 @@ const presetKeys = Object.keys(pomodoroPresets);
 let currentPresetIndex = 0;
 let focusDuration, shortBreakDuration, longBreakDuration, cyclesBeforeLongBreak;
 
-// --- LÓGICA DE AUTENTICAÇÃO E TAREFAS (SUPABASE) ---
+
+// --- LÓGICA DE AUTENTICAÇÃO --- (Mantida e integrada com a nova agenda)
 async function checkUser() {
     const { data: { session } } = await _supabase.auth.getSession();
     user = session?.user;
     updateUIForUser();
     if (user) {
-        await fetchTasks();
-    } else {
-        loadTasksFromLocalStorage();
+        await loadUpcomingEvents();
     }
+    // Carrega o idioma salvo depois que a UI inicial e os eventos foram renderizados
+    const savedLang = localStorage.getItem('pomodoroLanguage') || 'pt';
+    setLanguage(savedLang);
 }
+
 function updateUIForUser() {
+    const profileDropdown = document.getElementById('profile-dropdown');
+    let dropdownContent = '';
+
     if (user) {
         userSessionDisplay.innerHTML = `
             <div class="flex items-center gap-4">
@@ -115,7 +118,44 @@ function updateUIForUser() {
             loginBtn.addEventListener('click', () => authModal.classList.add('is-open'));
         }
     }
+
+    dropdownContent += `
+        <button id="ranking-btn" class="w-full text-left p-2 hover:bg-slate-600 rounded-lg mt-2 border-t border-slate-600" data-i18n-key="ranking">Ranking</button>
+        <button id="lang-switcher-btn" class="w-full text-left p-2 hover:bg-slate-600 rounded-lg mt-2 border-t border-slate-600">
+            ${currentLanguage === 'pt' ? 'Switch to English' : 'Mudar para Português'}
+        </button>
+    `;
+
+    profileDropdown.innerHTML = dropdownContent;
+
+    if (user) {
+        document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
+    } else {
+        document.getElementById('login-btn-main')?.addEventListener('click', () => authModal.classList.add('is-open'));
+    }
+
+    // Re-attach event listener for language switcher
+    document.getElementById('lang-switcher-btn')?.addEventListener('click', () => {
+        const newLang = currentLanguage === 'pt' ? 'en' : 'pt';
+        setLanguage(newLang);
+    });
+
+    // Ranking Modal
+    const rankingModal = document.getElementById('ranking-modal');
+    const closeRankingBtn = document.getElementById('close-ranking-btn');
+
+    document.getElementById('ranking-btn')?.addEventListener('click', () => {
+        rankingModal.classList.remove('hidden');
+        rankingModal.classList.add('flex');
+        fetchAndDisplayRanking();
+    });
+
+    closeRankingBtn?.addEventListener('click', () => {
+        rankingModal.classList.add('hidden');
+        rankingModal.classList.remove('flex');
+    });
 }
+
 async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
@@ -130,82 +170,112 @@ async function handleLogin(e) {
         authModal.classList.remove('is-open');
     }
 }
+
 async function handleRegister(e) {
     e.preventDefault();
     const email = document.getElementById('register-email').value;
     const password = document.getElementById('register-password').value;
     const passwordConfirm = document.getElementById('register-password-confirm').value;
-    if (password !== passwordConfirm) {
-        alert('As senhas não correspondem.');
-        return;
-    }
-    const { data, error } = await _supabase.auth.signUp({ email, password });
-    if (error) {
-        alert(error.message);
-    } else {
-        alert('Registro bem-sucedido! Verifique seu e-mail para confirmar.');
-        showLoginView();
-    }
+    if (password !== passwordConfirm) return alert('As senhas não correspondem.');
+
+    const { error } = await _supabase.auth.signUp({ email, password });
+    if (error) return alert(error.message);
+
+    alert('Registro bem-sucedido! Verifique seu e-mail para confirmar.');
+    showLoginView();
 }
+
 async function handleLogout() {
     await _supabase.auth.signOut();
     user = null;
+    eventsCache = [];
     updateUIForUser();
-    loadTasksFromLocalStorage();
+    renderUpcomingEvents();
+    resetAgendaDetails();
 }
-function showLoginView() {
-    loginView.classList.remove('hidden');
-    registerView.classList.add('hidden');
-}
-function showRegisterView() {
-    loginView.classList.add('hidden');
-    registerView.classList.remove('hidden');
-}
-function loadTasksFromLocalStorage() {
-    const localTasks = localStorage.getItem('pomodoroTasks');
-    tasks = localTasks ? JSON.parse(localTasks) : [];
-    renderTasks();
-}
-async function fetchTasks() {
-    if (!user) return;
-    try {
-        const { data, error } = await _supabase.from('tasks').select('*').order('created_at');
-        if (error) throw error;
-        tasks = data;
-        renderTasks();
-    } catch (error) {
-        console.error("Erro ao buscar tarefas:", error);
-    }
-}
-async function addTask(e) {
-    e.preventDefault();
-    const text = taskInput.value.trim();
-    if (!text) return;
 
-    if (user) {
-        const { data, error } = await _supabase.from('tasks').insert({ text: text, user_id: user.id }).select();
-        if (error) {
-            console.error('Erro ao adicionar tarefa:', error);
-        } else {
-            tasks.push(data[0]);
-        }
-    } else {
-        const newTask = { id: Date.now(), text, done: false, created_at: new Date().toISOString() };
-        tasks.push(newTask);
-        localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
+function showLoginView() {
+    if (loginView && registerView) {
+        loginView.classList.remove('hidden');
+        registerView.classList.add('hidden');
     }
-    taskInput.value = '';
-    renderTasks();
 }
-async function updateTaskStatus(id, done) {
-    if (user) {
-        await _supabase.from('tasks').update({ done }).eq('id', id);
-    } else {
-        const taskIndex = tasks.findIndex(t => t.id === id);
-        if (taskIndex > -1) {
-            tasks[taskIndex].done = done;
-            localStorage.setItem('pomodoroTasks', JSON.stringify(tasks));
+
+function showRegisterView() {
+    if (loginView && registerView) {
+        loginView.classList.add('hidden');
+        registerView.classList.remove('hidden');
+    }
+}
+
+// =================================================================
+// --- ✅ NOVA LÓGICA DA AGENDA DE EVENTOS (SUBSTITUI A ANTIGA) ---
+// =================================================================
+
+/**
+ * Carrega os eventos futuros do Supabase e os armazena no cache.
+ */
+async function loadUpcomingEvents() {
+    if (!user) return;
+    const today = new Date().toISOString().slice(0, 10);
+
+    try {
+        const { data, error } = await _supabase
+            .from('events') // ATENÇÃO: Nome da sua tabela no Supabase.
+            .select('id, title, date, content')
+            .eq('user_id', user.id)
+            .gte('date', today)
+            .order('date', { ascending: true });
+
+        if (error) throw error;
+        eventsCache = data;
+        renderUpcomingEvents();
+    } catch (error) {
+        console.error("Erro ao carregar eventos:", error);
+        upcomingEventsList.innerHTML = '<p class="text-red-500">Não foi possível carregar os eventos.</p>';
+    }
+}
+
+async function updateUserProfile(focusedSeconds) {
+    if (!user) return;
+
+    try {
+        // 1. Pega o perfil atual
+        const { data: profile, error: profileError } = await _supabase
+            .from('profiles')
+            .select('completed_cycles, total_focus_seconds')
+            .eq('id', user.id)
+            .single();
+
+        if (profileError) {
+            // Se o perfil não existir, pode ser um usuário antigo. Podemos criar um aqui.
+            if (profileError.code === 'PGRST116') {
+                 await _supabase.from('profiles').insert([{
+                    id: user.id,
+                    username: user.email.split('@')[0],
+                    completed_cycles: 1,
+                    total_focus_seconds: focusedSeconds
+                }]);
+            } else {
+                throw profileError;
+            }
+        } else {
+            // 2. Atualiza o perfil
+            const updatedCycles = (profile.completed_cycles || 0) + 1;
+            const updatedSeconds = (profile.total_focus_seconds || 0) + focusedSeconds;
+
+            const { error: updateError } = await _supabase
+                .from('profiles')
+                .update({
+                    completed_cycles: updatedCycles,
+                    total_focus_seconds: updatedSeconds
+                })
+                .eq('id', user.id);
+
+            if (updateError) throw updateError;
         }
+    } catch (err) {
+        console.error("Erro ao atualizar o perfil:", err);
     }
 }
 async function deleteTask(id) {
@@ -282,6 +352,34 @@ async function handleTaskListClick(e) {
     if (taskIndex === -1) return;
 
     const li = target.closest('li');
+
+    if (action === 'toggle') {
+        tasks[taskIndex].done = !tasks[taskIndex].done;
+        await updateTaskStatus(id, tasks[taskIndex].done);
+        const newLi = createTaskElement(tasks[taskIndex]);
+        li.replaceWith(newLi);
+        newLi.classList.add('task-updated');
+        setTimeout(() => newLi.classList.remove('task-updated'), 300);
+
+    } else if (action === 'delete') {
+        li.classList.add('task-item-deleting');
+        li.addEventListener('animationend', async () => {
+            tasks.splice(taskIndex, 1);
+            await deleteTask(id);
+            li.remove();
+            if (tasks.length === 0) {
+                renderTasks();
+            }
+        });
+    }
+}
+
+/**
+ * Mostra os detalhes de um evento no painel direito.
+ */
+function displayEventDetails(eventId) {
+    const event = eventsCache.find(e => e.id == eventId);
+    if (!event) return;
 
     if (action === 'toggle') {
         tasks[taskIndex].done = !tasks[taskIndex].done;
@@ -377,15 +475,291 @@ async function handleChatSubmit(e) {
     addMessageToChat('ai', aiResponse);
 }
 
-// --- LÓGICA DO POMODORO (Existente) ---
+/**
+ * Limpa o painel de detalhes da agenda.
+ */
+function resetAgendaDetails() {
+    agendaTitle.textContent = 'Selecione um evento';
+    agendaInput.value = '';
+    agendaInput.placeholder = 'As tarefas do evento selecionado aparecerão aqui.';
+    delete agendaInput.dataset.currentEventId;
+    saveAgendaBtn.classList.add('hidden'); // Esconde o botão ao resetar
+    document.querySelectorAll('.event-item').forEach(el => el.classList.remove('bg-indigo-600'));
+}
+
+/**
+ * Salva as alterações feitas diretamente na área de texto da agenda.
+ */
+async function handleDirectSave() {
+    const eventId = agendaInput.dataset.currentEventId;
+    if (!eventId) return;
+
+    const newContent = agendaInput.value;
+    saveAgendaBtn.disabled = true;
+    saveAgendaBtn.textContent = 'Salvando...';
+
+    try {
+        const { error } = await _supabase
+            .from('events')
+            .update({ content: newContent })
+            .eq('id', eventId);
+
+        if (error) throw error;
+
+        // Atualiza o cache local para refletir a mudança
+        const eventInCache = eventsCache.find(e => e.id == eventId);
+        if (eventInCache) {
+            eventInCache.content = newContent;
+        }
+
+        saveAgendaBtn.classList.add('hidden'); // Esconde o botão após salvar
+
+    } catch (err) {
+        console.error("Erro ao salvar anotações:", err);
+        alert("Não foi possível salvar as alterações.");
+    } finally {
+        saveAgendaBtn.disabled = false;
+        saveAgendaBtn.textContent = 'Salvar';
+    }
+}
+
+async function handleDeleteEvent(eventId) {
+    if (!eventId) return;
+
+    const eventToDelete = eventsCache.find(e => e.id == eventId);
+    if (!eventToDelete) return;
+
+    const confirmation = confirm(`Tem certeza que deseja excluir o evento "${eventToDelete.title}"?\nEsta ação não pode ser desfeita.`);
+
+    if (confirmation) {
+        try {
+            const { error } = await _supabase
+                .from('events')
+                .delete()
+                .eq('id', eventId);
+
+            if (error) throw error;
+
+            // Remove from cache
+            eventsCache = eventsCache.filter(e => e.id != eventId);
+
+            // Check if the deleted event was the one being displayed
+            if (agendaInput.dataset.currentEventId == eventId) {
+                resetAgendaDetails();
+            }
+
+            // Re-render the list
+            renderUpcomingEvents();
+
+        } catch (err) {
+            console.error("Erro ao excluir evento:", err);
+            alert("Não foi possível excluir o evento.");
+        }
+    }
+}
+
+async function fetchAndDisplayRanking() {
+    try {
+        const { data, error } = await _supabase
+            .from('profiles')
+            .select('username, completed_cycles, total_focus_seconds')
+            .order('completed_cycles', { ascending: false })
+            .limit(10); // Pega o Top 10
+
+        if (error) throw error;
+
+        const rankingList = document.getElementById('ranking-list');
+        rankingList.innerHTML = ''; // Limpa a lista
+
+        if (data.length === 0) {
+            rankingList.innerHTML = `<p class="text-center text-gray-400" data-i18n-key="no_ranking_data">Nenhum dado de ranking ainda.</p>`;
+            return;
+        }
+
+        data.forEach((profile, index) => {
+            const hours = (profile.total_focus_seconds / 3600).toFixed(1);
+            const rank = index + 1;
+            const rankEl = document.createElement('div');
+            rankEl.className = 'flex items-center justify-between p-3 rounded-lg bg-slate-700';
+            rankEl.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <span class="font-bold text-lg w-8 text-center">${rank}</span>
+                    <span class="font-semibold">${profile.username || 'Anônimo'}</span>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-indigo-400">${profile.completed_cycles} <span data-i18n-key="cycles">ciclos</span></p>
+                    <p class="text-sm text-slate-400">${hours} <span data-i18n-key="hours">horas</span></p>
+                </div>
+            `;
+            rankingList.appendChild(rankEl);
+        });
+    } catch (err) {
+        console.error("Erro ao buscar o ranking:", err);
+        const rankingList = document.getElementById('ranking-list');
+        rankingList.innerHTML = `<p class="text-center text-red-500" data-i18n-key="ranking_error">Não foi possível carregar o ranking.</p>`;
+    }
+}
+
+/**
+ * Calcula o texto da contagem regressiva para uma data.
+ */
+function getCountdownText(dateString) {
+    const eventDate = new Date(dateString + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = eventDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return translations[currentLanguage]['countdown_past'] || "Evento passado";
+    if (diffDays === 0) return translations[currentLanguage]['countdown_today'] || "É hoje!";
+    if (diffDays === 1) return translations[currentLanguage]['countdown_tomorrow'] || "É amanhã!";
+
+    const key = 'countdown_days';
+    const text = translations[currentLanguage][key] || `Faltam {days} dias`;
+    return text.replace('{days}', diffDays);
+}
+
+/**
+ * Abre o modal de edição para um novo evento ou um existente.
+ */
+function openEventEditor(eventId = null) {
+    if (!eventEditorForm) return; // Adiciona uma guarda para segurança
+    eventEditorForm.reset();
+
+    if (eventId) {
+        const event = eventsCache.find(e => e.id == eventId);
+        if (!event) return;
+        eventEditorTitle.textContent = "Editar Evento";
+        eventIdInput.value = event.id;
+        eventTitleInput.value = event.title;
+        eventTasksInput.value = event.content || '';
+        eventDateInput.value = event.date;
+    } else {
+        eventEditorTitle.textContent = "Adicionar Novo Evento";
+        eventIdInput.value = '';
+        eventTitleInput.value = '';
+        eventTasksInput.value = '';
+        eventDateInput.value = new Date().toISOString().slice(0, 10);
+    }
+
+    eventEditorModal.classList.remove('hidden');
+    eventEditorModal.classList.add('flex');
+}
+
+/**
+ * Fecha o modal de edição de eventos.
+ */
+function closeEventEditor() {
+    eventEditorModal.classList.add('hidden');
+    eventEditorModal.classList.remove('flex');
+}
+
+/**
+ * Lida com o envio do formulário de evento.
+ */
+async function handleEventSubmit(e) {
+    e.preventDefault();
+    if (!user) return alert("Você precisa estar logado para salvar um evento.");
+
+    const selectedDate = eventDateInput.value;
+    if (!selectedDate) {
+        alert("Por favor, selecione uma data para o evento.");
+        return;
+    }
+
+    const eventData = {
+        user_id: user.id,
+        title: eventTitleInput.value,
+        content: eventTasksInput.value,
+        date: selectedDate,
+    };
+    const eventId = eventIdInput.value;
+
+    try {
+        const { error } = eventId
+            ? await _supabase.from('events').update(eventData).eq('id', eventId)
+            : await _supabase.from('events').insert([eventData]);
+        if (error) throw error;
+        closeEventEditor();
+        await loadUpcomingEvents();
+    } catch (err) {
+        console.error("Erro ao salvar evento:", err);
+        alert("Não foi possível salvar o evento.");
+    }
+}
+
+// --- LÓGICA DE INTERNACIONALIZAÇÃO (I18N) ---
+let currentLanguage = 'pt';
+
+function setLanguage(lang) {
+    console.log(`[i18n] Setting language to: ${lang}`);
+    currentLanguage = lang;
+    localStorage.setItem('pomodoroLanguage', lang);
+    const langBtn = document.getElementById('lang-switcher-btn');
+    if (langBtn) {
+        langBtn.textContent = lang === 'pt' ? 'EN' : 'PT';
+    }
+
+    const elements = document.querySelectorAll('[data-i18n-key]');
+    console.log(`[i18n] Found ${elements.length} elements to translate.`);
+
+    elements.forEach(el => {
+        const key = el.getAttribute('data-i18n-key');
+        let text = translations[lang][key] || `%%${key}%%`; // Add markers for missing keys
+
+        if (el.hasAttribute('data-i18n-params')) {
+            try {
+                const params = JSON.parse(el.getAttribute('data-i18n-params'));
+                Object.keys(params).forEach(p => {
+                    text = text.replace(`{${p}}`, params[p]);
+                });
+            } catch (e) {
+                console.error(`[i18n] Failed to parse params for key: ${key}`, e);
+            }
+        }
+
+        console.log(`[i18n] Translating key '${key}' to '${text}'`);
+
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            if (el.placeholder) {
+                el.placeholder = text;
+            }
+        } else {
+            if (el.id !== 'cycles-count-display') { // Não sobrescrever o número
+                el.textContent = text;
+            }
+        }
+    });
+
+    // Handle the special case of the cycle counter
+    const cyclesCompletedTextElement = document.querySelector('[data-i18n-id="cycles-completed-text"] [data-i18n-key="cycles_completed"]');
+    if (cyclesCompletedTextElement) {
+        cyclesCompletedTextElement.textContent = translations[lang]['cycles_completed'] || 'Ciclos Completos:';
+    }
+
+    // Since some dynamic elements might be re-rendered, let's re-translate them specifically
+    updateModeDisplay();
+    updatePresetDisplay();
+    renderUpcomingEvents(); // This will now use the correct language
+}
+
+
+// --- LÓGICA DO POMODORO, PLAYER, IA, ETC. (CÓDIGO ORIGINAL MANTIDO) ---
+
+// ... (todo o seu código de updatePresetDisplay, startTimer, callGeminiAPI, etc., vai aqui, exatamente como era antes)
+
 function updatePresetDisplay(isInitial = false, direction = 0) {
     const currentPresetKey = presetKeys[currentPresetIndex];
-    const presetName = pomodoroPresets[currentPresetKey].name;
+    const presetNameKey = `preset_${currentPresetKey}`;
+    const presetName = translations[currentLanguage][presetNameKey] || pomodoroPresets[currentPresetKey].name;
+
     if (isInitial) {
         presetDisplay.textContent = presetName;
         applyPreset(currentPresetKey);
         return;
     }
+
     const outClass = direction === 1 ? 'slide-out-to-left' : 'slide-out-to-right';
     const inClass = direction === 1 ? 'slide-in-from-right' : 'slide-in-from-left';
     presetDisplay.classList.add(outClass);
@@ -397,6 +771,7 @@ function updatePresetDisplay(isInitial = false, direction = 0) {
         presetDisplay.addEventListener('animationend', () => presetDisplay.classList.remove(inClass), { once: true });
     }, { once: true });
 }
+
 function navigatePresets(direction) {
     if (!isPaused) return;
     currentPresetIndex = (currentPresetIndex + direction + presetKeys.length) % presetKeys.length;
@@ -406,6 +781,28 @@ function setupRadioPlayer() {
     localAudioPlayer.src = 'https://lofi.stream.laut.fm/lofi';
     playerCurrentTrackName.textContent = 'Rádio Lo-Fi';
 }
+
+function setupRadioPlayer() {
+    const musicCategorySelect = document.getElementById('music-category-select');
+
+    // Clear existing options
+    musicCategorySelect.innerHTML = '';
+
+    // Populate options from musicStations object
+    for (const key in musicStations) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = musicStations[key].name;
+        musicCategorySelect.appendChild(option);
+    }
+
+    const currentStationKey = getCurrentStation();
+    const station = musicStations[currentStationKey];
+    localAudioPlayer.src = station.url;
+    playerCurrentTrackName.textContent = station.name;
+    musicCategorySelect.value = currentStationKey;
+}
+
 function toggleMusicPlayer() {
     if (localAudioPlayer.paused) {
         localAudioPlayer.load();
@@ -414,6 +811,7 @@ function toggleMusicPlayer() {
         localAudioPlayer.pause();
     }
 }
+
 function applyPreset(presetKey) {
     const settings = pomodoroPresets[presetKey]?.settings;
     if (!settings) return;
@@ -424,12 +822,14 @@ function applyPreset(presetKey) {
     localStorage.setItem('pomodoroPreset', presetKey);
     setMode('focus', true);
 }
+
 function loadPomodoroSettings() {
     const savedPresetKey = localStorage.getItem('pomodoroPreset') || 'default';
     currentPresetIndex = presetKeys.indexOf(savedPresetKey);
     if (currentPresetIndex === -1) currentPresetIndex = 0;
     updatePresetDisplay(true);
 }
+
 function updateTimerDisplay() {
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
@@ -441,18 +841,21 @@ function updateTimerDisplay() {
         timerDisplay.classList.add('timer-tick');
     }
 }
+
 function updateModeDisplay() {
     modeButtons.forEach(btn => btn.classList.remove('active'));
     document.querySelector(`[data-mode="${currentMode}"]`)?.classList.add('active');
-    const modeTexts = { focus: 'Modo Foco', shortBreak: 'Pausa Curta', longBreak: 'Descanso Longo' };
-    currentModeDisplay.textContent = modeTexts[currentMode];
+    const modeKey = { focus: 'focus_mode', shortBreak: 'short_break', longBreak: 'long_break' }[currentMode];
+    currentModeDisplay.textContent = translations[currentLanguage][modeKey] || modeKey;
 }
+
 function setVolumeByMode(mode) {
     const targetVolume = (mode === 'focus') ? 0.2 : 0.05;
     localAudioPlayer.volume = targetVolume;
     playerVolumeSlider.value = targetVolume * 100;
     updateVolumeSlider();
 }
+
 function setMode(mode, manualReset = false) {
     currentMode = mode;
     isPaused = true;
@@ -471,10 +874,12 @@ function setMode(mode, manualReset = false) {
     }
     setVolumeByMode(mode);
 }
+
 function playSound(soundElement) {
     soundElement.currentTime = 0;
     soundElement.play().catch(e => console.error("Erro ao tocar som:", e));
 }
+
 function startTimer() {
     if (!isPaused) return;
     if (!areSoundsUnlocked) {
@@ -483,9 +888,7 @@ function startTimer() {
         warningSound.play().then(() => warningSound.pause());
         areSoundsUnlocked = true;
     }
-    if (localAudioPlayer.paused) {
-        toggleMusicPlayer();
-    }
+    if (localAudioPlayer.paused) toggleMusicPlayer();
     isPaused = false;
     timerDisplay.classList.add('timer-glowing');
     startTimerBtn.classList.add('hidden');
@@ -502,10 +905,15 @@ function startTimer() {
         }
         if (timeLeft < 0) {
             clearInterval(timerInterval);
-            const previousMode = currentMode;
             if (currentMode === 'focus') {
                 currentCycleCount++;
                 cyclesCountDisplay.textContent = currentCycleCount;
+
+                // Atualiza o perfil do usuário no Supabase
+                updateUserProfile(focusDuration);
+
+                const cyclesCompletedText = translations[currentLanguage]['cycles_completed'] || 'Ciclos Completos:';
+                cyclesCountDisplay.parentElement.textContent = `${cyclesCompletedText} ${currentCycleCount}`;
                 setMode(currentCycleCount % cyclesBeforeLongBreak === 0 ? 'longBreak' : 'shortBreak');
                 playSound(notificationSound);
             } else {
@@ -517,25 +925,27 @@ function startTimer() {
         }
     }, 1000);
 }
+
 function pauseTimer() {
     isPaused = true;
     clearInterval(timerInterval);
     timerDisplay.classList.remove('timer-glowing');
     startTimerBtn.classList.remove('hidden');
     pauseTimerBtn.classList.remove('hidden');
-    modeButtons.forEach(btn => btn.disabled = true);
-    prevPresetBtn.disabled = true;
-    nextPresetBtn.disabled = true;
 }
+
 function requestNotificationPermission() {
     if ('Notification' in window && Notification.permission !== 'granted') {
-        Notification.requestPermission().then(p => notificationPermission = p);
+        Notification.requestPermission();
     }
 }
+
 function showNotification(title, body) {
     if (Notification.permission === "granted") new Notification(title, { body });
 }
+
 function updateVolumeSlider() {
+    if (!playerVolumeSlider) return;
     const volume = playerVolumeSlider.value;
     const percentage = `${volume}%`;
     volumeTooltip.textContent = percentage;
@@ -546,8 +956,20 @@ function updateVolumeSlider() {
     playerVolumeSlider.style.background = `linear-gradient(to right, var(--accent-primary) ${percentage}, var(--border-color) ${percentage})`;
 }
 
-// --- INICIALIZAÇÃO ---
+
+// --- INICIALIZAÇÃO GERAL ---
+// --- INICIALIZAÇÃO GERAL ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Inicialização dos elementos do editor de eventos
+    eventEditorModal = document.getElementById('event-editor-modal');
+    eventEditorForm = document.getElementById('event-editor-form');
+    eventEditorTitle = document.getElementById('event-editor-title');
+    eventIdInput = document.getElementById('event-id');
+    eventTitleInput = document.getElementById('event-title-input');
+    eventTasksInput = document.getElementById('event-tasks-input');
+    cancelEventEditorBtn = document.getElementById('cancel-event-editor-btn');
+    eventDateInput = document.getElementById('event-date-input');
+
     // Autenticação
     if (closeAuthModalBtn && authModal) {
         closeAuthModalBtn.addEventListener('click', () => authModal.classList.remove('is-open'));
@@ -587,6 +1009,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (localAudioPlayer) localAudioPlayer.volume = playerVolumeSlider.value / 100;
         updateVolumeSlider();
     });
+    toggleVolumeBtn?.addEventListener('click', () => volumeControlContainer.classList.toggle('hidden'));
 
     if (toggleVolumeBtn && volumeControlContainer) {
         toggleVolumeBtn.addEventListener('click', () => {
@@ -641,32 +1064,57 @@ document.addEventListener('DOMContentLoaded', () => {
     updateVolumeSlider();
     setupRadioPlayer();
     requestNotificationPermission();
-    checkUser();
+    checkUser(); // Ponto de entrada que inicia a verificação de usuário e o carregamento de dados
+
+    // Lógica de Seleção de Dispositivo
+    const deviceModal = document.getElementById('device-selection-modal');
+    const selectDesktopBtn = document.getElementById('select-desktop-btn');
+    const selectMobileBtn = document.getElementById('select-mobile-btn');
+    const savedDevice = localStorage.getItem('pomodoroDevice');
+
+    function setDeviceView(device) {
+        document.body.classList.remove('view-desktop', 'view-mobile');
+        document.body.classList.add(`view-${device}`);
+        localStorage.setItem('pomodoroDevice', device);
+        deviceModal.style.display = 'none';
+    }
+
+    if (savedDevice) {
+        setDeviceView(savedDevice);
+    } else {
+        deviceModal.style.display = 'flex';
+    }
+
+    selectDesktopBtn.addEventListener('click', () => setDeviceView('desktop'));
+    selectMobileBtn.addEventListener('click', () => setDeviceView('mobile'));
 });
 
-// ✅ LÓGICA DA TELA DE CARREGAMENTO COM TEXTO DIGITADO
 window.addEventListener('load', () => {
     if (loader) {
         const text = "Organize suas tarefas. Aumente sua produtividade.";
         let i = 0;
-
-        // Atraso inicial para as animações de entrada terminarem
         setTimeout(() => {
             loaderParagraph.classList.add('typing');
-
             function typeWriter() {
                 if (i < text.length) {
                     loaderParagraph.innerHTML += text.charAt(i);
                     i++;
-                    setTimeout(typeWriter, 60); // Velocidade da digitação
+                    setTimeout(typeWriter, 60);
                 } else {
-                    // Fim da animação
-                    setTimeout(() => {
-                        loader.classList.add('hidden');
-                    }, 1500); // Tempo de espera após a digitação
+                    setTimeout(() => loader.classList.add('hidden'), 1500);
                 }
             }
             typeWriter();
-        }, 2000); // Inicia a digitação após 2 segundos
+        }, 2000);
     }
-});
+})
+
+    if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(registration => {
+      console.log('SW registered: ', registration);
+    }).catch(registrationError => {
+      console.log('SW registration failed: ', registrationError);
+    });
+  });
+};

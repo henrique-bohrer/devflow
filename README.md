@@ -58,7 +58,7 @@ Um editor de código como o Visual Studio Code.
 Passo a Passo da Instalação
 Clone o Repositório:
 
-git clone https://github.com/seu-usuario/devflow-pomodoro.git
+git clone https://github.com/henrique-bohrer/devflow.git
 
 Ou simplesmente baixe e extraia os arquivos do projeto.
 
@@ -80,7 +80,7 @@ Copie e cole o código do arquivo database_setup.sql (disponível no repositóri
 
 Acesse o Projeto:
 
-Abra seu navegador e acesse: http://localhost/devflow-pomodoro/
+Abra seu navegador e acesse: https://devflow-pomodoro.netlify.app/
 
 O projeto agora deve estar funcionando completamente em sua máquina local!
 
