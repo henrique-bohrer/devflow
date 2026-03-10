@@ -933,7 +933,7 @@ async function startRadioByGenre() {
     confirmGenreBtn.disabled = true;
 
     try {
-        const response = await fetch(`https://de1.api.radio-browser.info/json/stations/bytag/${encodeURIComponent(genre)}?limit=10&order=clickcount&reverse=true`);
+        const response = await fetch(`https://de1.api.radio-browser.info/json/stations/search?tag=${encodeURIComponent(genre.toLowerCase())}&limit=10&order=clickcount&reverse=true`);
         const stations = await response.json();
 
         if (stations && stations.length > 0) {
