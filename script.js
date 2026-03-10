@@ -58,6 +58,18 @@ const saveAgendaBtn = document.getElementById('save-agenda-btn'); // Botão para
 // ✅ NOVOS ELEMENTOS DO MODAL DE EDIÇÃO DE EVENTO
 let eventEditorModal, eventEditorForm, eventEditorTitle, eventIdInput, eventTitleInput, eventTasksInput, cancelEventEditorBtn, eventDateInput;
 
+const playerSearchBtn = document.getElementById('player-search-btn');
+const musicSearchModal = document.getElementById('music-search-modal');
+const closeMusicSearchBtn = document.getElementById('close-music-search-btn');
+const genreSearchInput = document.getElementById('genre-search-input');
+const searchGenreBtn = document.getElementById('search-genre-btn');
+const aiArtistsContainer = document.getElementById('ai-artists-container');
+const aiArtistsList = document.getElementById('ai-artists-list');
+const excludeArtistContainer = document.getElementById('exclude-artist-container');
+const excludeArtistInput = document.getElementById('exclude-artist-input');
+const confirmGenreContainer = document.getElementById('confirm-genre-container');
+const confirmGenreBtn = document.getElementById('confirm-genre-btn');
+
 // Outros Elementos (Mantidos)
 const pixDonationBtn = document.getElementById('pix-donation-btn');
 const pixModal = document.getElementById('pix-modal');
@@ -726,11 +738,50 @@ function updateModeDisplay() {
     currentModeDisplay.textContent = translations[currentLanguage][modeKey] || modeKey;
 }
 
+let volumeFadeInterval = null;
+
 function setVolumeByMode(mode) {
     const targetVolume = (mode === 'focus') ? 0.2 : 0.05;
-    localAudioPlayer.volume = targetVolume;
-    playerVolumeSlider.value = targetVolume * 100;
-    updateVolumeSlider();
+
+    if (volumeFadeInterval) {
+        clearInterval(volumeFadeInterval);
+    }
+
+    // Se o player estiver pausado, apenas define o volume diretamente
+    if (localAudioPlayer.paused) {
+        localAudioPlayer.volume = targetVolume;
+        playerVolumeSlider.value = targetVolume * 100;
+        updateVolumeSlider();
+        return;
+    }
+
+    const startVolume = localAudioPlayer.volume;
+    const difference = targetVolume - startVolume;
+    const duration = 2000; // 2 seconds fade
+    const steps = 20; // 20 steps
+    const stepTime = duration / steps;
+    const stepChange = difference / steps;
+
+    let currentStep = 0;
+
+    volumeFadeInterval = setInterval(() => {
+        currentStep++;
+        let newVolume = startVolume + (stepChange * currentStep);
+
+        // Clamp between 0 and 1
+        newVolume = Math.max(0, Math.min(1, newVolume));
+
+        localAudioPlayer.volume = newVolume;
+        playerVolumeSlider.value = newVolume * 100;
+        updateVolumeSlider();
+
+        if (currentStep >= steps) {
+            clearInterval(volumeFadeInterval);
+            localAudioPlayer.volume = targetVolume;
+            playerVolumeSlider.value = targetVolume * 100;
+            updateVolumeSlider();
+        }
+    }, stepTime);
 }
 
 function setMode(mode, manualReset = false) {
@@ -833,7 +884,96 @@ function updateVolumeSlider() {
 }
 
 
+
+
+// --- LÓGICA DE PESQUISA DE RÁDIO E ARTISTAS ---
+async function searchArtistsByGenre(genre) {
+    if (!genre) return;
+    searchGenreBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    searchGenreBtn.disabled = true;
+
+    try {
+        const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(genre)}&entity=allArtist&limit=5`);
+        const data = await response.json();
+
+        aiArtistsList.innerHTML = '';
+        if (data.results && data.results.length > 0) {
+            data.results.forEach(artist => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center gap-2 p-2 bg-slate-700 rounded-lg';
+                li.innerHTML = `<i class="fa-solid fa-music text-indigo-400"></i> <span>${artist.artistName}</span>`;
+                aiArtistsList.appendChild(li);
+            });
+            aiArtistsContainer.classList.remove('hidden');
+            excludeArtistContainer.classList.remove('hidden');
+            confirmGenreContainer.classList.remove('hidden');
+            confirmGenreContainer.classList.add('flex');
+        } else {
+            aiArtistsList.innerHTML = '<li class="text-slate-400">Nenhum artista encontrado para este gênero.</li>';
+            aiArtistsContainer.classList.remove('hidden');
+            excludeArtistContainer.classList.remove('hidden');
+            confirmGenreContainer.classList.remove('hidden');
+            confirmGenreContainer.classList.add('flex');
+        }
+    } catch (error) {
+        console.error("Erro ao buscar artistas:", error);
+        aiArtistsList.innerHTML = '<li class="text-red-400">Erro ao carregar artistas.</li>';
+        aiArtistsContainer.classList.remove('hidden');
+    } finally {
+        searchGenreBtn.innerHTML = '<i class="fa-solid fa-search"></i>';
+        searchGenreBtn.disabled = false;
+    }
+}
+
+async function startRadioByGenre() {
+    const genre = genreSearchInput.value.trim();
+    if (!genre) return;
+
+    confirmGenreBtn.innerHTML = 'Buscando rádio <i class="fa-solid fa-spinner fa-spin ml-2"></i>';
+    confirmGenreBtn.disabled = true;
+
+    try {
+        const response = await fetch(`https://de1.api.radio-browser.info/json/stations/bytag/${encodeURIComponent(genre)}?limit=10&order=clickcount&reverse=true`);
+        const stations = await response.json();
+
+        if (stations && stations.length > 0) {
+            // Pick the first reliable station
+            const station = stations[0];
+            const newStationKey = `custom_${Date.now()}`;
+
+            // Adiciona a nova estação à lista e seleciona
+            musicStations[newStationKey] = {
+                name: station.name || `Rádio ${genre}`,
+                url: station.url_resolved || station.url
+            };
+
+            setupRadioPlayer(); // Re-render select
+
+            const musicCategorySelect = document.getElementById('music-category-select');
+            musicCategorySelect.value = newStationKey;
+
+            // Dispatch change event to play
+            musicCategorySelect.dispatchEvent(new Event('change'));
+
+            // Oculta o modal
+            musicSearchModal.classList.add('hidden');
+            musicSearchModal.classList.remove('flex');
+
+        } else {
+            alert(`Nenhuma rádio encontrada para o gênero "${genre}".`);
+        }
+    } catch (error) {
+        console.error("Erro ao buscar rádio:", error);
+        alert("Erro ao buscar rádio. Tente novamente.");
+    } finally {
+        confirmGenreBtn.innerHTML = 'Tocar Rádio deste Gênero';
+        confirmGenreBtn.disabled = false;
+    }
+}
+
 // --- INICIALIZAÇÃO GERAL ---
+
+
 // --- INICIALIZAÇÃO GERAL ---
 document.addEventListener('DOMContentLoaded', () => {
     // Inicialização dos elementos do editor de eventos
@@ -866,6 +1006,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
     prevPresetBtn?.addEventListener('click', () => navigatePresets(-1));
     nextPresetBtn?.addEventListener('click', () => navigatePresets(1));
+
+
+    // Pesquisa de Música
+    playerSearchBtn?.addEventListener('click', () => {
+        musicSearchModal.classList.remove('hidden');
+        musicSearchModal.classList.add('flex');
+        genreSearchInput.value = '';
+        excludeArtistInput.value = '';
+        aiArtistsContainer.classList.add('hidden');
+        excludeArtistContainer.classList.add('hidden');
+        confirmGenreContainer.classList.add('hidden');
+        confirmGenreContainer.classList.remove('flex');
+    });
+
+    closeMusicSearchBtn?.addEventListener('click', () => {
+        musicSearchModal.classList.add('hidden');
+        musicSearchModal.classList.remove('flex');
+    });
+
+    searchGenreBtn?.addEventListener('click', () => searchArtistsByGenre(genreSearchInput.value.trim()));
+    genreSearchInput?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') searchArtistsByGenre(genreSearchInput.value.trim());
+    });
+
+    confirmGenreBtn?.addEventListener('click', startRadioByGenre);
 
     // Player
     playerPlayPauseBtn?.addEventListener('click', toggleMusicPlayer);
@@ -911,6 +1076,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localAudioPlayer?.addEventListener('play', () => playPauseIconContainer.innerHTML = `<i class="fa-solid fa-pause fa-lg"></i>`);
     localAudioPlayer?.addEventListener('pause', () => playPauseIconContainer.innerHTML = `<i class="fa-solid fa-play fa-lg"></i>`);
     playerVolumeSlider?.addEventListener('input', () => {
+        if (volumeFadeInterval) clearInterval(volumeFadeInterval);
         if (localAudioPlayer) localAudioPlayer.volume = playerVolumeSlider.value / 100;
         updateVolumeSlider();
     });
