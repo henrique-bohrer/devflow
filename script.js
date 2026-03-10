@@ -685,8 +685,16 @@ function setupRadioPlayer() {
         musicCategorySelect.appendChild(option);
     }
 
-    const currentStationKey = getCurrentStation();
-    const station = musicStations[currentStationKey];
+    let currentStationKey = getCurrentStation();
+    let station = musicStations[currentStationKey];
+
+    // If the station was custom and the page reloaded, it won't exist in the list anymore
+    if (!station) {
+        currentStationKey = 'lofi';
+        station = musicStations['lofi'];
+        localStorage.setItem('pomodoroMusicStation', 'lofi');
+    }
+
     localAudioPlayer.src = station.url;
     playerCurrentTrackName.textContent = station.name;
     musicCategorySelect.value = currentStationKey;
